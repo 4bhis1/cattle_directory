@@ -21,9 +21,11 @@ import {
   CalendarToday,
   Add,
   Edit,
+  Dashboard,
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { Fade, Zoom } from '@mui/material';
+import DairyDashboard from './dashboard';
 
 // Mock data - Replace with actual API calls
 const mockStats = {
@@ -61,6 +63,9 @@ const mockRecentActivity = [
 ];
 
 export default function HomePage() {
+
+  return <DairyDashboard />;
+
   const getTodayDate = () => {
     const today = new Date();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -102,6 +107,20 @@ export default function HomePage() {
                     }}
                   >
                     Add Cattle
+                  </Button>
+                </Link>
+                <Link href="/feed/add">
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    sx={{
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                      },
+                    }}
+                  >
+                    Add Feeding Record
                   </Button>
                 </Link>
                 <Link href="/milk">
