@@ -1,5 +1,6 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import {
   TextField,
   Button,
@@ -8,7 +9,6 @@ import {
   CircularProgress,
   InputAdornment,
   IconButton,
-  Tooltip,
   Chip,
   Box,
   Fade,
@@ -21,19 +21,32 @@ import {
   Paper,
   Divider,
   Avatar,
+  Switch,
+  FormControlLabel,
+  Breadcrumbs,
+  Link,
+  ImageList,
+  ImageListItem,
+  Stack,
 } from '@mui/material';
 import {
   CheckCircle,
   Error,
-  Phone,
-  LocationOn,
   CalendarMonth,
   AttachMoney,
   Pets,
   LocalDrink,
   InfoOutlined,
   CloudUpload,
-  Store,
+  ArrowBack,
+  NavigateNext,
+  FamilyRestroom,
+  PhotoLibrary,
+  Delete,
+  Restaurant,
+  Medication,
+  Warning,
+  AddAPhoto,
 } from '@mui/icons-material';
 
 interface FormData {
@@ -42,12 +55,14 @@ interface FormData {
   cattleType: string;
   dateOfJoining: string;
   purchaseAmount: string;
-  sellerContactNumber: string;
-  sellerAddress: string;
   age: string;
-  photo: File | null;
-  photoPreview: string;
   estimatedMilkProductionDaily: string;
+  isGivingMilk: boolean;
+  isPregnant: boolean;
+  motherId: string;
+  gallery: string[];
+  lastPhotoDate?: string;
+  lastMedicineDate?: string;
 }
 
 interface FormErrors {
@@ -58,30 +73,39 @@ interface FormTouched {
   [key: string]: boolean;
 }
 
-type SnackbarSeverity = 'success' | 'error' | 'warning' | 'info';
-
-interface CattleFormProps {
-  cattleId?: string;
+interface Cattle {
+  _id: string;
+  name: string;
+  cattleId: string;
 }
 
-export default function CattleForm({ cattleId }: CattleFormProps) {
+type SnackbarSeverity = 'success' | 'error' | 'warning' | 'info';
+
+export default function CattleForm() {
+  const router = useRouter();
+  const params = useParams();
+  const cattleId = params?.cattleId as string;
+
   const [form, setForm] = useState<FormData>({
     name: '',
     breed: '',
     cattleType: 'cow',
     dateOfJoining: '',
     purchaseAmount: '',
-    sellerContactNumber: '',
-    sellerAddress: '',
     age: '',
-    photo: null,
-    photoPreview: '',
     estimatedMilkProductionDaily: '',
+    isGivingMilk: false,
+    isPregnant: false,
+    motherId: '',
+    gallery: [],
+    lastPhotoDate: '',
+    lastMedicineDate: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<FormTouched>({});
   const [loading, setLoading] = useState(false);
+  const [allCattle, setAllCattle] = useState<Cattle[]>([]);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -91,70 +115,76 @@ export default function CattleForm({ cattleId }: CattleFormProps) {
     message: '',
     severity: 'success',
   });
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  // Real-time validation
-  const validateField = (name: string, value: string): string => {
-    let error = '';
-
-    switch (name) {
-      case 'name':
-        if (!value.trim()) error = 'Name is required';
-        else if (value.length < 2) error = 'Name must be at least 2 characters';
-        break;
-      case 'breed':
-        if (!value.trim()) error = 'Breed is required';
-        break;
-      case 'dateOfJoining':
-        if (!value) error = 'Date is required';
-        else if (new Date(value) > new Date()) error = 'Date cannot be in the future';
-        break;
-      case 'sellerContactNumber':
-        if (value && !/^\d{10}$/.test(value.replace(/\D/g, ''))) {
-          error = 'Phone number must be 10 digits';
-        }
-        break;
-      case 'purchaseAmount':
-        if (value && parseFloat(value) < 0) error = 'Amount cannot be negative';
-        break;
-      case 'age':
-        if (value && (parseFloat(value) < 0 || parseFloat(value) > 30)) {
-          error = 'Age must be between 0 and 30 years';
-        }
-        break;
-      case 'photo':
-        if (value && !isValidUrl(value)) {
-          error = 'Please enter a valid URL';
-        }
-        break;
-      case 'estimatedMilkProductionDaily':
-        if (value && (parseFloat(value) < 0 || parseFloat(value) > 100)) {
-          error = 'Production must be between 0 and 100 liters';
-        }
-        break;
+  useEffect(() => {
+    fetchCattleList();
+    if (cattleId && cattleId !== 'add') {
+      fetchCattleDetails(cattleId);
     }
+  }, [cattleId]);
 
-    return error;
+  const fetchCattleList = async () => {
+    try {
+      const response = await fetch('/api/cattle');
+      const data = await response.json();
+      if (data.success) {
+        const list = cattleId
+          ? data.data.filter((c: Cattle) => c._id !== cattleId)
+          : data.data;
+        setAllCattle(list);
+      }
+    } catch (error) {
+      console.error('Error fetching cattle list:', error);
+    }
   };
 
-  const isValidUrl = (string: string): boolean => {
+  const fetchCattleDetails = async (id: string) => {
     try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
+      setTimeout(() => {
+        setForm(prev => ({
+          ...prev,
+          name: 'Lakshmi',
+          breed: 'Jersey',
+          cattleType: 'cow',
+          dateOfJoining: '2023-01-15',
+          purchaseAmount: '45000',
+          age: '4',
+          estimatedMilkProductionDaily: '12',
+          isGivingMilk: true,
+          isPregnant: false,
+          motherId: '',
+          gallery: [
+            'https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=150&h=150&fit=crop',
+            'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=300&h=300&fit=crop'
+          ],
+          lastPhotoDate: '2023-10-01',
+          lastMedicineDate: '2023-09-15',
+        }));
+      }, 500);
+    } catch (error) {
+      console.error('Error fetching cattle details:', error);
     }
+  };
+
+  const validateField = (name: string, value: any): string => {
+    let error = '';
+    if (name === 'name' && !value.trim()) error = 'Name is required';
+    if (name === 'breed' && !value.trim()) error = 'Breed is required';
+    if (name === 'dateOfJoining' && !value) error = 'Date is required';
+    return error;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
-
-    // Validate on change if field has been touched
     if (touched[name]) {
-      const error = validateField(name, value);
-      setErrors({ ...errors, [name]: error });
+      setErrors({ ...errors, [name]: validateField(name, value) });
     }
+  };
+
+  const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setForm({ ...form, [name]: checked });
   };
 
   const handleSelectChange = (e: any) => {
@@ -162,649 +192,505 @@ export default function CattleForm({ cattleId }: CattleFormProps) {
     setForm({ ...form, [name]: value });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        setSnackbar({
-          open: true,
-          message: 'Please upload a valid image file (JPG, PNG, WEBP)',
-          severity: 'error',
-        });
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setSnackbar({
-          open: true,
-          message: 'File size should be less than 5MB',
-          severity: 'error',
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setForm({
-          ...form,
-          photo: file,
-          photoPreview: reader.result as string,
-        });
-      };
-      reader.readAsDataURL(file);
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setForm(prev => ({
+            ...prev,
+            gallery: [...prev.gallery, reader.result as string],
+            lastPhotoDate: new Date().toISOString().split('T')[0]
+          }));
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== index)
+    }));
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTouched({ ...touched, [name]: true });
-    const error = validateField(name, value);
-    setErrors({ ...errors, [name]: error });
-    setFocusedField(null);
-  };
-
-  const handleFocus = (name: string) => {
-    setFocusedField(name);
+    setErrors({ ...errors, [name]: validateField(name, value) });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // Validate all fields
-    const newErrors: FormErrors = {};
-    Object.keys(form).forEach((key) => {
-      if (key === 'photo' || key === 'photoPreview') return; // Skip file fields
-      const error = validateField(key, form[key as keyof FormData] as string);
-      if (error) newErrors[key] = error;
-    });
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setTouched(
-        Object.keys(form).reduce((acc, key) => ({ ...acc, [key]: true }), {})
-      );
-      setSnackbar({
-        open: true,
-        message: 'Please fix the errors in the form',
-        severity: 'error',
-      });
-      return;
-    }
-
     setLoading(true);
-
-    // Simulate API call
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log('Cattle Form Data:', form);
-
+    setTimeout(() => {
+      setLoading(false);
       setSnackbar({
         open: true,
-        message: '🐄 Cattle added successfully!',
+        message: cattleId ? '🐄 Cattle updated successfully!' : '🐄 Cattle added successfully!',
         severity: 'success',
       });
-
-      // Reset form after successful submission
-      setTimeout(() => {
-        setForm({
-          name: '',
-          breed: '',
-          cattleType: 'cow',
-          dateOfJoining: '',
-          purchaseAmount: '',
-          sellerContactNumber: '',
-          sellerAddress: '',
-          age: '',
-          photo: null,
-          photoPreview: '',
-          estimatedMilkProductionDaily: '',
-        });
-        setTouched({});
-        setErrors({});
-      }, 1500);
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: 'Failed to add cattle. Please try again.',
-        severity: 'error',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getFieldIcon = (fieldName: string) => {
-    const icons: { [key: string]: React.ReactElement } = {
-      name: <Pets />,
-      breed: <Pets />,
-      dateOfJoining: <CalendarMonth />,
-      purchaseAmount: <AttachMoney />,
-      sellerContactNumber: <Phone />,
-      sellerAddress: <LocationOn />,
-      estimatedMilkProductionDaily: <LocalDrink />,
-    };
-    return icons[fieldName];
+    }, 1500);
   };
 
   const getFieldStatus = (fieldName: string) => {
     if (!touched[fieldName]) return null;
     if (errors[fieldName]) return <Error color="error" />;
-    if (form[fieldName as keyof FormData]) return <CheckCircle color="success" />;
+    if (form[fieldName as keyof FormData] && typeof form[fieldName as keyof FormData] === 'string') return <CheckCircle color="success" />;
     return null;
   };
 
   const calculateProgress = (): number => {
-    const fields = Object.keys(form);
+    const fields = ['name', 'breed', 'dateOfJoining', 'purchaseAmount', 'age'];
     const filled = fields.filter((key) => form[key as keyof FormData] && !errors[key]).length;
     return Math.round((filled / fields.length) * 100);
   };
 
+  const isCurrentMonth = (dateString?: string) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  };
+
+  const hasPhotoWarning = cattleId && !isCurrentMonth(form.lastPhotoDate);
+  const hasMedsWarning = cattleId && !isCurrentMonth(form.lastMedicineDate);
+  const profilePhoto = form.gallery.length > 0 ? form.gallery[form.gallery.length - 1] : '/placeholder-cow.png';
+
   return (
-    <Box className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-      <Fade in={true} timeout={800}>
-        <form
-          onSubmit={handleSubmit}
-          className="max-w-5xl mx-auto"
-        >
-          {/* Header */}
-          <Box className="text-center mb-8">
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Add New Cattle
-            </h2>
-            <p className="text-gray-600 text-lg">Fill in the details to register a new cattle</p>
-            
-            {/* Progress Indicator */}
-            <Box className="mt-6 mb-2 max-w-md mx-auto">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Form Progress</span>
-                <Chip
-                  label={`${calculateProgress()}%`}
-                  size="small"
-                  color={calculateProgress() === 100 ? 'success' : 'primary'}
-                  className="animate-pulse"
-                />
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${calculateProgress()}%` }}
-                />
-              </div>
+    <Box className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
+      <Paper elevation={1} sx={{ position: 'sticky', top: 0, zIndex: 1100 }} className="bg-white border-b border-gray-200 mb-6">
+        <Box className="max-w-5xl mx-auto px-4 py-3">
+          <Box className="flex items-center justify-between">
+            <Box className="flex items-center">
+              <IconButton onClick={() => router.back()} size="small" className="mr-2">
+                <ArrowBack />
+              </IconButton>
+              <Box>
+                <Breadcrumbs separator={<NavigateNext fontSize="small" />} aria-label="breadcrumb" sx={{ '& .MuiBreadcrumbs-li': { fontSize: '0.8rem' } }}>
+                  <Link color="inherit" href="/home" onClick={(e) => { e.preventDefault(); router.push('/home'); }} className="no-underline hover:text-blue-600 cursor-pointer">
+                    Dashboard
+                  </Link>
+                  <Link color="inherit" href="/cattle/dashboard" onClick={(e) => { e.preventDefault(); router.push('/cattle/dashboard'); }} className="no-underline hover:text-blue-600 cursor-pointer">
+                    Cattle
+                  </Link>
+                  <Typography color="text.primary" sx={{ fontSize: '0.8rem' }}>{cattleId ? 'Edit Cattle' : 'Add Cattle'}</Typography>
+                </Breadcrumbs>
+                <Typography variant="h6" className="font-bold text-gray-800 leading-none mt-1">
+                  {cattleId ? `Edit ${form.name || 'Cattle'}` : 'Add New Cattle'}
+                </Typography>
+              </Box>
             </Box>
           </Box>
+        </Box>
+      </Paper>
 
-          {/* Photo Upload Section */}
-          <Zoom in={true} style={{ transitionDelay: '100ms' }}>
-            <Paper elevation={3} className="p-8 mb-6 bg-white rounded-2xl">
-              <Box className="flex flex-col items-center">
-                <Typography variant="h6" className="mb-4 font-semibold text-gray-800">
-                  Cattle Photo
-                </Typography>
-                
-                <Box className="relative mb-4">
-                  <Avatar
-                    src={form.photoPreview || '/placeholder-cow.png'}
-                    alt="Cattle"
-                    sx={{
-                      width: 180,
-                      height: 180,
-                      border: '4px solid #e5e7eb',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                    }}
-                  />
-                  {form.photoPreview && (
-                    <CheckCircle
+      <Fade in={true} timeout={800}>
+        <form onSubmit={handleSubmit} className="max-w-5xl mx-auto px-4">
+
+          {(hasPhotoWarning || hasMedsWarning) && (
+            <Zoom in={true}>
+              <Paper elevation={0} className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Warning color="warning" />
+                  <Box>
+                    <Typography variant="subtitle2" className="font-bold text-orange-800">
+                      Attention Required
+                    </Typography>
+                    <Stack direction="row" spacing={2} mt={1}>
+                      {hasPhotoWarning && (
+                        <Chip
+                          icon={<AddAPhoto />}
+                          label="No photo added this month"
+                          color="warning"
+                          size="small"
+                          variant="outlined"
+                          onClick={() => document.getElementById('gallery-upload')?.click()}
+                        />
+                      )}
+                      {hasMedsWarning && (
+                        <Chip
+                          icon={<Medication />}
+                          label="No medicines added this month"
+                          color="warning"
+                          size="small"
+                          variant="outlined"
+                          onClick={() => router.push(`/medicine/add?cattleId=${cattleId}`)}
+                        />
+                      )}
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Paper>
+            </Zoom>
+          )}
+
+          <Box className="mb-8 max-w-md mx-auto">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Form Progress</span>
+              <Chip
+                label={`${calculateProgress()}%`}
+                size="small"
+                color={calculateProgress() === 100 ? 'success' : 'primary'}
+                className="animate-pulse"
+              />
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${calculateProgress()}%` }}
+              />
+            </div>
+          </Box>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1 space-y-6">
+
+              <Zoom in={true} style={{ transitionDelay: '100ms' }}>
+                <Paper elevation={3} className="p-6 bg-white rounded-2xl overflow-hidden">
+                  <Box className="flex items-center justify-between mb-4">
+                    <Typography variant="h6" className="font-semibold text-gray-800 flex items-center">
+                      <PhotoLibrary className="mr-2 text-pink-500" /> Gallery
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      size="small"
+                      startIcon={<CloudUpload />}
+                    >
+                      Add
+                      <input
+                        id="gallery-upload"
+                        type="file"
+                        hidden
+                        multiple
+                        accept="image/*"
+                        onChange={handleGalleryUpload}
+                      />
+                    </Button>
+                  </Box>
+
+                  <Box className="mb-4 flex justify-center">
+                    <Avatar
+                      src={profilePhoto}
+                      alt="Profile Preview"
                       sx={{
-                        position: 'absolute',
-                        bottom: 10,
-                        right: 10,
-                        color: '#10b981',
-                        bgcolor: 'white',
-                        borderRadius: '50%',
-                        fontSize: 32,
+                        width: 150,
+                        height: 150,
+                        border: '4px solid #fff',
+                        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
                       }}
                     />
+                  </Box>
+
+                  <Divider className="mb-4" />
+
+                  {form.gallery.length > 0 ? (
+                    <ImageList sx={{ width: '100%', maxHeight: 200 }} cols={3} rowHeight={80}>
+                      {form.gallery.map((item, index) => (
+                        <ImageListItem key={index}>
+                          <img
+                            src={item}
+                            alt={`Gallery ${index}`}
+                            loading="lazy"
+                            style={{ borderRadius: 8, height: '80px', objectFit: 'cover' }}
+                          />
+                          <IconButton
+                            sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'rgba(255,255,255,0.7)', padding: '2px' }}
+                            size="small"
+                            onClick={() => removeGalleryImage(index)}
+                          >
+                            <Delete fontSize="small" color="error" />
+                          </IconButton>
+                        </ImageListItem>
+                      ))}
+                    </ImageList>
+                  ) : (
+                    <Typography variant="body2" color="textSecondary" align="center">
+                      No photos yet. Add one to set profile picture.
+                    </Typography>
                   )}
-                </Box>
+                </Paper>
+              </Zoom>
 
-                <Button
-                  variant="contained"
-                  component="label"
-                  startIcon={<CloudUpload />}
-                  sx={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                    px: 4,
-                    py: 1.5,
-                    fontSize: '1rem',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)',
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {form.photo ? 'Change Photo' : 'Upload Photo'}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-                </Button>
-                <Typography variant="caption" className="mt-2 text-gray-500">
-                  Maximum file size: 5MB. Supported formats: JPG, PNG, WEBP
-                </Typography>
-              </Box>
-            </Paper>
-          </Zoom>
+              <Zoom in={true} style={{ transitionDelay: '150ms' }}>
+                <Paper elevation={3} className="p-6 bg-white rounded-2xl">
+                  <Typography variant="h6" className="mb-4 font-semibold text-gray-800 flex items-center">
+                    <InfoOutlined className="mr-2 text-blue-500" /> Status
+                  </Typography>
+                  <Divider className="mb-4" />
 
-          {/* Cattle Information Section */}
-          <Zoom in={true} style={{ transitionDelay: '150ms' }}>
-            <Paper elevation={3} className="p-8 mb-6 bg-white rounded-2xl">
-              <Box className="flex items-center mb-6">
-                <Pets sx={{ fontSize: 32, color: '#3b82f6', mr: 2 }} />
-                <Typography variant="h5" className="font-bold text-gray-800">
-                  Cattle Information
-                </Typography>
-              </Box>
-              <Divider className="mb-6" />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Name */}
-                <div>
-                  <TextField
-                    fullWidth
-                    label="Name"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    onFocus={() => handleFocus('name')}
-                    error={touched.name && !!errors.name}
-                    helperText={touched.name && errors.name}
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Pets />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {getFieldStatus('name')}
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
-                      },
-                    }}
-                  />
-                </div>
-
-                {/* Cattle Type */}
-                <div>
-                  <FormControl fullWidth required>
-                    <InputLabel>Cattle Type</InputLabel>
-                    <Select
-                      label="Cattle Type"
-                      name="cattleType"
-                      value={form.cattleType}
-                      onChange={handleSelectChange}
-                      startAdornment={
-                        <InputAdornment position="start">
-                          <Pets />
-                        </InputAdornment>
+                  <Box className="space-y-4">
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={form.isGivingMilk}
+                          onChange={handleSwitchChange}
+                          name="isGivingMilk"
+                          color="primary"
+                        />
                       }
-                      sx={{
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
+                      label="Giving Milk"
+                      className="w-full justify-between ml-0"
+                    />
+                    <Divider />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={form.isPregnant}
+                          onChange={handleSwitchChange}
+                          name="isPregnant"
+                          color="secondary"
+                        />
+                      }
+                      label="Pregnant"
+                      className="w-full justify-between ml-0"
+                    />
+                  </Box>
+                </Paper>
+              </Zoom>
+
+              {cattleId && (
+                <Zoom in={true} style={{ transitionDelay: '200ms' }}>
+                  <Paper elevation={3} className="p-6 bg-white rounded-2xl border-l-4 border-l-purple-500">
+                    <Typography variant="h6" className="mb-4 font-semibold text-gray-800">
+                      Quick Actions
+                    </Typography>
+                    <Box className="grid grid-cols-2 gap-3">
+                      <Button
+                        variant="outlined"
+                        startIcon={<LocalDrink />}
+                        onClick={() => router.push(`/milk?cattleId=${cattleId}`)}
+                        size="small"
+                      >
+                        Milk
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        startIcon={<Restaurant />}
+                        onClick={() => router.push(`/feed/add?cattleId=${cattleId}`)}
+                        size="small"
+                      >
+                        Feed
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        startIcon={<Medication />}
+                        onClick={() => router.push(`/medicine/add?cattleId=${cattleId}`)}
+                        size="small"
+                      >
+                        Meds
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        startIcon={<Delete />}
+                        onClick={() => router.push(`/waste/add?cattleId=${cattleId}`)}
+                        size="small"
+                      >
+                        Waste
+                      </Button>
+                    </Box>
+                  </Paper>
+                </Zoom>
+              )}
+            </div>
+
+            <div className="lg:col-span-2 space-y-6">
+              <Zoom in={true} style={{ transitionDelay: '200ms' }}>
+                <Paper elevation={3} className="p-8 bg-white rounded-2xl">
+                  <Box className="flex items-center mb-6">
+                    <Pets sx={{ fontSize: 32, color: '#3b82f6', mr: 2 }} />
+                    <Typography variant="h5" className="font-bold text-gray-800">
+                      Cattle Information
+                    </Typography>
+                  </Box>
+                  <Divider className="mb-6" />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <TextField
+                      fullWidth
+                      label="Name"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.name && !!errors.name}
+                      helperText={touched.name && errors.name}
+                      required
+                      size="small"
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start"><Pets /></InputAdornment>,
+                        endAdornment: <InputAdornment position="end">{getFieldStatus('name')}</InputAdornment>,
                       }}
-                    >
-                      <MenuItem value="cow">🐄 Cow</MenuItem>
-                      <MenuItem value="buffalo">🐃 Buffalo</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
+                    />
 
-                {/* Breed */}
-                <div>
-                  <TextField
+                    <FormControl fullWidth required size="small">
+                      <InputLabel>Cattle Type</InputLabel>
+                      <Select
+                        label="Cattle Type"
+                        name="cattleType"
+                        value={form.cattleType}
+                        onChange={handleSelectChange}
+                        startAdornment={<InputAdornment position="start"><Pets /></InputAdornment>}
+                      >
+                        <MenuItem value="cow">🐄 Cow</MenuItem>
+                        <MenuItem value="buffalo">🐃 Buffalo</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <TextField
+                      fullWidth
+                      label="Breed"
+                      name="breed"
+                      value={form.breed}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.breed && !!errors.breed}
+                      helperText={touched.breed && errors.breed}
+                      required
+                      size="small"
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start"><Pets /></InputAdornment>,
+                        endAdornment: <InputAdornment position="end">{getFieldStatus('breed')}</InputAdornment>,
+                      }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      label="Age (years)"
+                      name="age"
+                      type="number"
+                      value={form.age}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.age && !!errors.age}
+                      helperText={touched.age && errors.age}
+                      size="small"
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">{getFieldStatus('age')}</InputAdornment>,
+                      }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      label="Date of Joining"
+                      name="dateOfJoining"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      value={form.dateOfJoining}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.dateOfJoining && !!errors.dateOfJoining}
+                      helperText={touched.dateOfJoining && errors.dateOfJoining}
+                      required
+                      size="small"
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start"><CalendarMonth /></InputAdornment>,
+                        endAdornment: <InputAdornment position="end">{getFieldStatus('dateOfJoining')}</InputAdornment>,
+                      }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      label="Est. Milk (L/day)"
+                      name="estimatedMilkProductionDaily"
+                      type="number"
+                      value={form.estimatedMilkProductionDaily}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.estimatedMilkProductionDaily && !!errors.estimatedMilkProductionDaily}
+                      helperText={touched.estimatedMilkProductionDaily && errors.estimatedMilkProductionDaily}
+                      size="small"
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start"><LocalDrink /></InputAdornment>,
+                        endAdornment: <InputAdornment position="end">{getFieldStatus('estimatedMilkProductionDaily')}</InputAdornment>,
+                      }}
+                    />
+
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Mother (if in farm)</InputLabel>
+                      <Select
+                        label="Mother (if in farm)"
+                        name="motherId"
+                        value={form.motherId}
+                        onChange={handleSelectChange}
+                        startAdornment={<InputAdornment position="start"><FamilyRestroom /></InputAdornment>}
+                      >
+                        <MenuItem value=""><em>None</em></MenuItem>
+                        {allCattle.map((cow) => (
+                          <MenuItem key={cow._id} value={cow._id}>
+                            {cow.name} ({cow.cattleId})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <TextField
+                      fullWidth
+                      label="Purchase Amount"
+                      name="purchaseAmount"
+                      type="number"
+                      value={form.purchaseAmount}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.purchaseAmount && !!errors.purchaseAmount}
+                      helperText={touched.purchaseAmount && errors.purchaseAmount}
+                      size="small"
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start"><AttachMoney /></InputAdornment>,
+                        endAdornment: <InputAdornment position="end">{getFieldStatus('purchaseAmount')}</InputAdornment>,
+                      }}
+                    />
+                  </div>
+                </Paper>
+              </Zoom>
+
+              <Zoom in={true} style={{ transitionDelay: '350ms' }}>
+                <Box className="mt-4">
+                  <Button
+                    variant="contained"
+                    type="submit"
                     fullWidth
-                    label="Breed"
-                    name="breed"
-                    value={form.breed}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    onFocus={() => handleFocus('breed')}
-                    error={touched.breed && !!errors.breed}
-                    helperText={touched.breed && errors.breed}
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Pets />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {getFieldStatus('breed')}
-                        </InputAdornment>
-                      ),
-                    }}
+                    disabled={loading}
+                    size="large"
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
+                      py: 2,
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                      borderRadius: '12px',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)',
                       },
                     }}
-                  />
-                </div>
-
-                {/* Age */}
-                <div>
-                  <TextField
-                    fullWidth
-                    label="Age (years)"
-                    name="age"
-                    type="number"
-                    value={form.age}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    onFocus={() => handleFocus('age')}
-                    error={touched.age && !!errors.age}
-                    helperText={touched.age && errors.age}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Tooltip title="Age of the cattle in years">
-                            <IconButton size="small">
-                              <InfoOutlined fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          {getFieldStatus('age')}
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
-                      },
-                    }}
-                  />
-                </div>
-
-                {/* Date of Joining */}
-                <div>
-                  <TextField
-                    fullWidth
-                    label="Date of Joining"
-                    name="dateOfJoining"
-                    type="date"
-                    InputLabelProps={{ shrink: true }}
-                    value={form.dateOfJoining}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    onFocus={() => handleFocus('dateOfJoining')}
-                    error={touched.dateOfJoining && !!errors.dateOfJoining}
-                    helperText={touched.dateOfJoining && errors.dateOfJoining}
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <CalendarMonth />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {getFieldStatus('dateOfJoining')}
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
-                      },
-                    }}
-                  />
-                </div>
-
-                {/* Milk Production */}
-                <div>
-                  <TextField
-                    fullWidth
-                    label="Estimated Milk Production (daily, liters)"
-                    name="estimatedMilkProductionDaily"
-                    type="number"
-                    value={form.estimatedMilkProductionDaily}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    onFocus={() => handleFocus('estimatedMilkProductionDaily')}
-                    error={
-                      touched.estimatedMilkProductionDaily &&
-                      !!errors.estimatedMilkProductionDaily
-                    }
-                    helperText={
-                      touched.estimatedMilkProductionDaily &&
-                      errors.estimatedMilkProductionDaily
-                    }
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LocalDrink />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {getFieldStatus('estimatedMilkProductionDaily')}
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              </div>
-            </Paper>
-          </Zoom>
-
-          {/* Seller Information Section */}
-          <Zoom in={true} style={{ transitionDelay: '200ms' }}>
-            <Paper elevation={3} className="p-8 mb-6 bg-white rounded-2xl">
-              <Box className="flex items-center mb-6">
-                <Store sx={{ fontSize: 32, color: '#8b5cf6', mr: 2 }} />
-                <Typography variant="h5" className="font-bold text-gray-800">
-                  Seller Information
-                </Typography>
-              </Box>
-              <Divider className="mb-6" />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Purchase Amount */}
-                <div>
-                  <TextField
-                    fullWidth
-                    label="Purchase Amount"
-                    name="purchaseAmount"
-                    type="number"
-                    value={form.purchaseAmount}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    onFocus={() => handleFocus('purchaseAmount')}
-                    error={touched.purchaseAmount && !!errors.purchaseAmount}
-                    helperText={touched.purchaseAmount && errors.purchaseAmount}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <AttachMoney />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {getFieldStatus('purchaseAmount')}
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
-                      },
-                    }}
-                  />
-                </div>
-
-                {/* Contact Number */}
-                <div>
-                  <TextField
-                    fullWidth
-                    label="Seller Contact Number"
-                    name="sellerContactNumber"
-                    value={form.sellerContactNumber}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    onFocus={() => handleFocus('sellerContactNumber')}
-                    error={touched.sellerContactNumber && !!errors.sellerContactNumber}
-                    helperText={
-                      touched.sellerContactNumber && errors.sellerContactNumber
-                        ? errors.sellerContactNumber
-                        : 'Format: 10 digits'
-                    }
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Phone />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {getFieldStatus('sellerContactNumber')}
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
-                      },
-                    }}
-                  />
-                </div>
-
-                {/* Address */}
-                <div className="md:col-span-2">
-                  <TextField
-                    fullWidth
-                    label="Seller Address"
-                    name="sellerAddress"
-                    value={form.sellerAddress}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    onFocus={() => handleFocus('sellerAddress')}
-                    multiline
-                    rows={3}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 2 }}>
-                          <LocationOn />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#3b82f6',
-                          borderWidth: '2px',
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              </div>
-            </Paper>
-          </Zoom>
-
-          {/* Submit Button */}
-          <Zoom in={true} style={{ transitionDelay: '250ms' }}>
-            <Box className="mt-4">
-              <Button
-                variant="contained"
-                type="submit"
-                fullWidth
-                disabled={loading}
-                size="large"
-                sx={{
-                  py: 2,
-                  fontSize: '1.2rem',
-                  fontWeight: 'bold',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                  borderRadius: '12px',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)',
-                  },
-                  '&:disabled': {
-                    background: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                {loading ? (
-                  <>
-                    <CircularProgress size={24} color="inherit" sx={{ mr: 2 }} />
-                    Submitting...
-                  </>
-                ) : (
-                  'SUBMIT'
-                )}
-              </Button>
-            </Box>
-          </Zoom>
+                  >
+                    {loading ? (
+                      <>
+                        <CircularProgress size={24} color="inherit" sx={{ mr: 2 }} />
+                        Saving...
+                      </>
+                    ) : (
+                      cattleId ? 'UPDATE CATTLE' : 'ADD CATTLE'
+                    )}
+                  </Button>
+                </Box>
+              </Zoom>
+            </div>
+          </div>
         </form>
       </Fade>
 
-      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled" sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

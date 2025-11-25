@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { mockData, generateId, Milk } from '@/lib/mockData';
 
 // GET /api/milk - Get all milk records (with optional date filter)
 export async function GET(request: NextRequest) {
@@ -8,33 +8,17 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get('date');
     const cattleId = searchParams.get('cattleId');
 
-    let query = `
-      SELECT 
-        mr.*,
-        c.name as cattle_name,
-        c.breed as cattle_breed
-      FROM milk_records mr
-      JOIN cattle c ON mr.cattle_id = c.id
-    `;
-    const params: any[] = [];
-    let paramCount = 1;
+    let filteredMilk = mockData.milk;
 
     if (date) {
-      query += ` WHERE mr.record_date = $${paramCount}`;
-      params.push(date);
-      paramCount++;
+      filteredMilk = filteredMilk.filter(m => m.date === date);
     }
 
     if (cattleId) {
-      query += date ? ` AND mr.cattle_id = $${paramCount}` : ` WHERE mr.cattle_id = $${paramCount}`;
-      params.push(cattleId);
-      paramCount++;
+      filteredMilk = filteredMilk.filter(m => m.cattleId === cattleId);
     }
 
-    query += ' ORDER BY mr.record_date DESC, c.name ASC';
-
-    const result = await pool.query(query, params);
-    return NextResponse.json({ success: true, data: result.rows }, { status: 200 });
+    return NextResponse.json({ success: true, data: filteredMilk }, { status: 200 });
   } catch (error) {
     console.error('Error fetching milk records:', error);
     return NextResponse.json(
@@ -48,50 +32,20 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { cattleId, recordDate, morningMilk, eveningMilk, ratePerLiter } = body;
 
-    // Validate required fields
-    if (!cattleId || !recordDate) {
-      return NextResponse.json(
-        { success: false, error: 'Cattle ID and record date are required' },
-        { status: 400 }
-      );
-    }
+    const newMilk: Milk = {
+      ...body,
+      _id: generateId(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
 
-    // Check if cattle exists
-    const cattleCheck = await pool.query('SELECT id FROM cattle WHERE id = $1', [cattleId]);
-    if (cattleCheck.rows.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Cattle not found' },
-        { status: 404 }
-      );
-    }
+    mockData.milk.push(newMilk);
 
-    // Use INSERT ... ON CONFLICT to handle updates if record already exists
-    const result = await pool.query(
-      `INSERT INTO milk_records (
-        cattle_id, record_date, morning_milk, evening_milk, rate_per_liter
-      ) VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (cattle_id, record_date)
-      DO UPDATE SET
-        morning_milk = EXCLUDED.morning_milk,
-        evening_milk = EXCLUDED.evening_milk,
-        rate_per_liter = EXCLUDED.rate_per_liter,
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING *`,
-      [
-        cattleId,
-        recordDate,
-        morningMilk || 0,
-        eveningMilk || 0,
-        ratePerLiter || 40,
-      ]
-    );
-
-    return NextResponse.json(
-      { success: true, data: result.rows[0] },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: newMilk
+    }, { status: 201 });
   } catch (error) {
     console.error('Error creating milk record:', error);
     return NextResponse.json(
@@ -100,4 +54,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 

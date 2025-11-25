@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { NextResponse } from 'next/server';
+import { mockData, generateId, Cattle } from '@/lib/mockData';
 
 // GET /api/cattle - Get all cattle
 export async function GET() {
   try {
-    const result = await pool.query(
-      'SELECT * FROM cattle ORDER BY created_at DESC'
-    );
-    return NextResponse.json({ success: true, data: result.rows }, { status: 200 });
+    return NextResponse.json({
+      success: true,
+      data: mockData.cattle
+    });
   } catch (error) {
     console.error('Error fetching cattle:', error);
     return NextResponse.json(
@@ -18,55 +18,23 @@ export async function GET() {
 }
 
 // POST /api/cattle - Add new cattle
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const {
-      name,
-      breed,
-      cattleType,
-      dateOfJoining,
-      purchaseAmount,
-      sellerContactNumber,
-      sellerAddress,
-      age,
-      photoUrl,
-      estimatedMilkProductionDaily,
-    } = body;
 
-    // Validate required fields
-    if (!name || !breed || !dateOfJoining) {
-      return NextResponse.json(
-        { success: false, error: 'Name, breed, and date of joining are required' },
-        { status: 400 }
-      );
-    }
+    const newCattle: Cattle = {
+      ...body,
+      _id: generateId(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
 
-    const result = await pool.query(
-      `INSERT INTO cattle (
-        name, breed, cattle_type, date_of_joining, purchase_amount,
-        seller_contact_number, seller_address, age, photo_url,
-        estimated_milk_production_daily
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING *`,
-      [
-        name,
-        breed,
-        cattleType || 'cow',
-        dateOfJoining,
-        purchaseAmount || null,
-        sellerContactNumber || null,
-        sellerAddress || null,
-        age || null,
-        photoUrl || null,
-        estimatedMilkProductionDaily || null,
-      ]
-    );
+    mockData.cattle.push(newCattle);
 
-    return NextResponse.json(
-      { success: true, data: result.rows[0] },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: newCattle
+    }, { status: 201 });
   } catch (error) {
     console.error('Error creating cattle:', error);
     return NextResponse.json(

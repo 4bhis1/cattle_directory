@@ -12,6 +12,7 @@ interface AnalyticsCardProps {
   iconColor: string;
   isProfit?: boolean;
   isProfitCard?: boolean;
+  onClick?: () => void;
 }
 
 export default function AnalyticsCard({
@@ -23,14 +24,19 @@ export default function AnalyticsCard({
   iconBg,
   iconColor,
   isProfit,
-  isProfitCard = false
+  isProfitCard = false,
+  onClick
 }: AnalyticsCardProps) {
   return (
-    <div className={`${styles.analyticsCard} ${isProfitCard ? styles.profitCard : ''}`}>
+    <div
+      className={`${styles.analyticsCard} ${isProfitCard ? styles.profitCard : ''} ${onClick ? styles.clickable : ''}`}
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+    >
       <div className={styles.analyticsHeader}>
-        <div 
+        <div
           className={styles.analyticsIcon}
-          style={{background: iconBg, color: iconColor}}
+          style={{ background: iconBg, color: iconColor }}
         >
           {icon}
         </div>
@@ -39,11 +45,10 @@ export default function AnalyticsCard({
           <span className={styles.analyticsSubtitle}>{subtitle}</span>
         </div>
       </div>
-      <div className={`${styles.analyticsValue} ${
-        isProfit !== undefined 
+      <div className={`${styles.analyticsValue} ${isProfit !== undefined
           ? (isProfit ? styles.profitPositive : styles.profitNegative)
           : ''
-      }`}>
+        }`}>
         {value}
       </div>
       <div className={styles.analyticsDetail}>
@@ -56,8 +61,8 @@ export default function AnalyticsCard({
             );
           }
           return (
-            <span 
-              key={i} 
+            <span
+              key={i}
               className={detail.includes('↑') ? `${styles.statTrend} ${styles.trendUp}` : ''}
             >
               {detail}
@@ -65,6 +70,16 @@ export default function AnalyticsCard({
           );
         })}
       </div>
+      {onClick && (
+        <div style={{
+          marginTop: '0.5rem',
+          fontSize: '0.75rem',
+          color: iconColor,
+          fontWeight: '500'
+        }}>
+          Click for detailed analytics →
+        </div>
+      )}
     </div>
   );
 }
