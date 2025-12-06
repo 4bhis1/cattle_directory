@@ -36,6 +36,7 @@ import {
   NavigateNext,
   Save,
 } from '@mui/icons-material';
+import StickyFooter from '../components/ui/StickyFooter';
 
 interface Cattle {
   _id: string;
@@ -57,6 +58,15 @@ type SnackbarSeverity = 'success' | 'error' | 'warning' | 'info';
 interface MilkStatsFormProps {
   initialDate?: string;
 }
+
+// Define stable InputProps objects outside the component to prevent re-creation on every render
+const literInputProps = {
+  endAdornment: <InputAdornment position="end">L</InputAdornment>,
+};
+
+const currencyInputProps = {
+  startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+};
 
 export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
   const router = useRouter();
@@ -371,11 +381,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                                 inputProps={{ min: 0, step: 0.01 }}
                                 size="small"
                                 fullWidth
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">L</InputAdornment>
-                                  ),
-                                }}
+                                InputProps={literInputProps}
                                 sx={{ maxWidth: 150 }}
                               />
                             </TableCell>
@@ -393,11 +399,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                                 inputProps={{ min: 0, step: 0.01 }}
                                 size="small"
                                 fullWidth
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">L</InputAdornment>
-                                  ),
-                                }}
+                                InputProps={literInputProps}
                                 sx={{ maxWidth: 150 }}
                               />
                             </TableCell>
@@ -415,11 +417,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                                 inputProps={{ min: 0, step: 0.01 }}
                                 size="small"
                                 fullWidth
-                                InputProps={{
-                                  startAdornment: (
-                                    <InputAdornment position="start">₹</InputAdornment>
-                                  ),
-                                }}
+                                InputProps={currencyInputProps}
                                 sx={{ maxWidth: 150 }}
                               />
                             </TableCell>
@@ -436,62 +434,20 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
       </Box>
 
       {/* Fixed Bottom Bar */}
-      <Paper
-        elevation={4}
-        sx={{
-          position: 'fixed',
-          bottom: 0,
-          left: { lg: '280px', xs: 0 },
-          right: 0,
-          zIndex: 1000,
-          borderRadius: '16px 16px 0 0'
+      <StickyFooter
+        stats={[
+          { label: 'Morning', value: totalMorningMilk.toFixed(1), unit: 'L', valueColor: 'text-blue-600' },
+          { label: 'Evening', value: totalEveningMilk.toFixed(1), unit: 'L', valueColor: 'text-purple-600' },
+          { label: 'Total', value: totalMilkProduced.toFixed(1), unit: 'L', valueColor: 'text-gray-800' },
+          { label: 'Income', value: `₹${totalCost.toFixed(0)}`, valueColor: 'text-green-600' }
+        ]}
+        submitButton={{
+          text: 'Save Production',
+          onClick: () => handleSubmit(),
+          loading: loading,
+          disabled: loading
         }}
-        className="bg-white/95 backdrop-blur-sm border-t border-gray-200"
-      >
-        <Box className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-          <Box className="flex gap-6 overflow-x-auto w-full md:w-auto justify-center md:justify-start no-scrollbar">
-            <Box className="flex flex-col items-center md:items-start">
-              <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold text-[0.65rem]">Morning</Typography>
-              <Typography variant="body1" className="text-blue-600 font-bold leading-none">{totalMorningMilk.toFixed(1)} <span className="text-xs text-gray-400">L</span></Typography>
-            </Box>
-            <Box className="flex flex-col items-center md:items-start">
-              <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold text-[0.65rem]">Evening</Typography>
-              <Typography variant="body1" className="text-purple-600 font-bold leading-none">{totalEveningMilk.toFixed(1)} <span className="text-xs text-gray-400">L</span></Typography>
-            </Box>
-            <Divider orientation="vertical" flexItem className="hidden md:block" />
-            <Box className="flex flex-col items-center md:items-start">
-              <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold text-[0.65rem]">Total</Typography>
-              <Typography variant="body1" className="text-gray-800 font-bold leading-none">{totalMilkProduced.toFixed(1)} <span className="text-xs text-gray-400">L</span></Typography>
-            </Box>
-            <Box className="flex flex-col items-center md:items-start">
-              <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold text-[0.65rem]">Income</Typography>
-              <Typography variant="body1" className="text-green-600 font-bold leading-none">₹{totalCost.toFixed(0)}</Typography>
-            </Box>
-          </Box>
-
-          <Button
-            variant="contained"
-            size="medium"
-            onClick={() => handleSubmit()}
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
-            sx={{
-              py: 1,
-              px: 4,
-              borderRadius: '10px',
-              textTransform: 'none',
-              fontSize: '1rem',
-              fontWeight: 'bold',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-              minWidth: '200px',
-              width: { xs: '100%', md: 'auto' }
-            }}
-          >
-            {loading ? 'Saving...' : 'Save Production'}
-          </Button>
-        </Box>
-      </Paper>
+      />
 
       {/* Snackbar for notifications */}
       <Snackbar

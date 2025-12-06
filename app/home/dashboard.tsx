@@ -73,7 +73,8 @@ export default function DairyDashboard() {
       'expense': '/expenses/add',
       'waste': '/waste/add',
       'sales': '/sales/add',
-      'dashboard': '/'
+      'dashboard': '/',
+      'feed-stock': '/feed/stock'
     };
 
     const route = routeMap[section] || '/';

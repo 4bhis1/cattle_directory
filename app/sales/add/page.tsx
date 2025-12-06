@@ -35,6 +35,7 @@ import {
     Save,
 } from '@mui/icons-material';
 import AddCustomerModal from '../../components/forms/AddCustomerModal';
+import StickyFooter from '../../components/ui/StickyFooter';
 
 type SnackbarSeverity = 'success' | 'error' | 'warning' | 'info';
 
@@ -440,53 +441,19 @@ export default function SalesForm() {
             </Box>
 
             {/* Fixed Bottom Bar */}
-            <Paper
-                elevation={4}
-                sx={{
-                    position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
-                    borderRadius: '24px 24px 0 0'
+            {/* Fixed Bottom Bar */}
+            <StickyFooter
+                stats={[
+                    { label: 'Total Quantity', value: formData.quantityInLiters || 0, unit: 'L', valueColor: 'text-blue-600' },
+                    { label: 'Total Amount', value: `₹${totalAmount.toFixed(0)}`, valueColor: 'text-green-600' }
+                ]}
+                submitButton={{
+                    text: 'Save Record',
+                    onClick: () => handleSubmit(),
+                    loading: loading,
+                    disabled: loading
                 }}
-                className="bg-white border-t border-gray-200"
-            >
-                <Box className="max-w-4xl mx-auto px-6 py-4">
-                    <Box className="flex items-center justify-between mb-4">
-                        <Box className="flex gap-8">
-                            <Box>
-                                <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold">Total Quantity</Typography>
-                                <Typography variant="h6" className="text-blue-600 font-bold">{formData.quantityInLiters || 0} L</Typography>
-                            </Box>
-                            <Box>
-                                <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold">Total Amount</Typography>
-                                <Typography variant="h6" className="text-green-600 font-bold">₹{totalAmount.toFixed(2)}</Typography>
-                            </Box>
-                        </Box>
-                    </Box>
-
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        onClick={() => handleSubmit()}
-                        disabled={loading}
-                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
-                        sx={{
-                            py: 1.5,
-                            borderRadius: '12px',
-                            textTransform: 'none',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
-                            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                        }}
-                    >
-                        {loading ? 'Saving...' : 'Save Sales Record'}
-                    </Button>
-                </Box>
-            </Paper>
+            />
 
             <AddCustomerModal
                 open={isCustomerModalOpen}

@@ -67,12 +67,7 @@ export default function MilkAnalyticsPage() {
     const [openChartModal, setOpenChartModal] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [stats, setStats] = useState({
-        totalQuantity: 0,
-        totalRevenue: 0,
-        avgPerDay: 0,
-        recordCount: 0,
-    });
+    // const [stats, setStats] = useState... removed
 
     useEffect(() => {
         const end = new Date();
@@ -119,25 +114,27 @@ export default function MilkAnalyticsPage() {
     };
 
     // Filter Logic
-    const filteredData = milkData.filter(record => {
-        const dateMatch = (!startDate || record.date >= startDate) && (!endDate || record.date <= endDate);
-        const cattleMatch = selectedCattle === 'all' || record.cattleId === selectedCattle;
-        const sessionMatch = selectedSession === 'all' || record.milkingSession === selectedSession;
-        return dateMatch && cattleMatch && sessionMatch;
-    });
+    const filteredData = React.useMemo(() => {
+        return milkData.filter(record => {
+            const dateMatch = (!startDate || record.date >= startDate) && (!endDate || record.date <= endDate);
+            const cattleMatch = selectedCattle === 'all' || record.cattleId === selectedCattle;
+            const sessionMatch = selectedSession === 'all' || record.milkingSession === selectedSession;
+            return dateMatch && cattleMatch && sessionMatch;
+        });
+    }, [milkData, startDate, endDate, selectedCattle, selectedSession]);
 
-    // Update Stats based on filtered data
-    useEffect(() => {
+    // Derived Stats (Calculated on the fly, no state needed for this to avoid loops)
+    const stats = React.useMemo(() => {
         const totalQty = filteredData.reduce((sum: number, m: any) => sum + m.quantity, 0);
         const totalRev = filteredData.reduce((sum: number, m: any) => sum + m.totalAmount, 0);
-        const days = Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) || 1;
+        const days = Math.ceil((new Date(endDate || new Date()).getTime() - new Date(startDate || new Date()).getTime()) / (1000 * 60 * 60 * 24)) || 1;
 
-        setStats({
+        return {
             totalQuantity: totalQty,
             totalRevenue: totalRev,
             avgPerDay: totalQty / days,
             recordCount: filteredData.length,
-        });
+        };
     }, [filteredData, startDate, endDate]);
 
     // Chart Data
@@ -374,7 +371,7 @@ export default function MilkAnalyticsPage() {
                 </DialogTitle>
                 <DialogContent dividers>
                     <Grid container spacing={4}>
-                        <Grid item xs={12} md={8}>
+                        <Grid xs={12} md={8}>
                             <Typography variant="h6" className="mb-4">Production Trend</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={chartData as any[]}>
@@ -387,7 +384,7 @@ export default function MilkAnalyticsPage() {
                                 </LineChart>
                             </ResponsiveContainer>
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid xs={12} md={4}>
                             <Typography variant="h6" className="mb-4">Session Split</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>

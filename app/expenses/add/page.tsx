@@ -31,6 +31,7 @@ import {
     NavigateNext,
     Save,
 } from '@mui/icons-material';
+import StickyFooter from '../../components/ui/StickyFooter';
 
 type SnackbarSeverity = 'success' | 'error' | 'warning' | 'info';
 
@@ -335,49 +336,18 @@ export default function ExpenseForm() {
             </Box>
 
             {/* Sticky Bottom Bar */}
-            <Paper
-                elevation={4}
-                sx={{
-                    position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
-                    borderRadius: '24px 24px 0 0'
+            {/* Sticky Bottom Bar */}
+            <StickyFooter
+                stats={[
+                    { label: 'Total Amount', value: `₹${formData.amount || '0'}`, valueColor: 'text-green-600' }
+                ]}
+                submitButton={{
+                    text: 'Save Record',
+                    onClick: () => handleSubmit(),
+                    loading: loading,
+                    disabled: loading
                 }}
-                className="bg-white border-t border-gray-200"
-            >
-                <Box className="max-w-4xl mx-auto px-6 py-4">
-                    <Box className="flex items-center justify-between mb-4">
-                        <Box>
-                            <Typography variant="caption" className="text-gray-500 uppercase font-bold">Total Amount</Typography>
-                            <Typography variant="h5" className="text-green-600 font-bold">
-                                ₹{formData.amount || '0.00'}
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        onClick={() => handleSubmit()}
-                        disabled={loading}
-                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
-                        sx={{
-                            py: 1.5,
-                            borderRadius: '12px',
-                            textTransform: 'none',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
-                            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                        }}
-                    >
-                        {loading ? 'Saving...' : 'Save Expense Record'}
-                    </Button>
-                </Box>
-            </Paper>
+            />
 
             {/* Snackbar for notifications */}
             <Snackbar
