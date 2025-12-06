@@ -441,53 +441,54 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
         sx={{
           position: 'fixed',
           bottom: 0,
-          left: 0,
+          left: { lg: '280px', xs: 0 },
           right: 0,
           zIndex: 1000,
-          borderRadius: '24px 24px 0 0'
+          borderRadius: '16px 16px 0 0'
         }}
-        className="bg-white border-t border-gray-200"
+        className="bg-white/95 backdrop-blur-sm border-t border-gray-200"
       >
-        <Box className="max-w-7xl mx-auto px-6 py-4">
-          <Box className="flex items-center justify-between mb-4">
-            <Box className="flex gap-8">
-              <Box>
-                <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold">Total Morning</Typography>
-                <Typography variant="h6" className="text-blue-600 font-bold">{totalMorningMilk.toFixed(1)} L</Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold">Total Evening</Typography>
-                <Typography variant="h6" className="text-purple-600 font-bold">{totalEveningMilk.toFixed(1)} L</Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold">Total Production</Typography>
-                <Typography variant="h6" className="text-gray-800 font-bold">{totalMilkProduced.toFixed(1)} L</Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold">Total Cost</Typography>
-                <Typography variant="h6" className="text-green-600 font-bold">₹{totalCost.toFixed(2)}</Typography>
-              </Box>
+        <Box className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+          <Box className="flex gap-6 overflow-x-auto w-full md:w-auto justify-center md:justify-start no-scrollbar">
+            <Box className="flex flex-col items-center md:items-start">
+              <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold text-[0.65rem]">Morning</Typography>
+              <Typography variant="body1" className="text-blue-600 font-bold leading-none">{totalMorningMilk.toFixed(1)} <span className="text-xs text-gray-400">L</span></Typography>
+            </Box>
+            <Box className="flex flex-col items-center md:items-start">
+              <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold text-[0.65rem]">Evening</Typography>
+              <Typography variant="body1" className="text-purple-600 font-bold leading-none">{totalEveningMilk.toFixed(1)} <span className="text-xs text-gray-400">L</span></Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem className="hidden md:block" />
+            <Box className="flex flex-col items-center md:items-start">
+              <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold text-[0.65rem]">Total</Typography>
+              <Typography variant="body1" className="text-gray-800 font-bold leading-none">{totalMilkProduced.toFixed(1)} <span className="text-xs text-gray-400">L</span></Typography>
+            </Box>
+            <Box className="flex flex-col items-center md:items-start">
+              <Typography variant="caption" className="text-gray-500 uppercase tracking-wider font-bold text-[0.65rem]">Income</Typography>
+              <Typography variant="body1" className="text-green-600 font-bold leading-none">₹{totalCost.toFixed(0)}</Typography>
             </Box>
           </Box>
 
           <Button
-            fullWidth
             variant="contained"
-            size="large"
+            size="medium"
             onClick={() => handleSubmit()}
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
             sx={{
-              py: 1.5,
-              borderRadius: '12px',
+              py: 1,
+              px: 4,
+              borderRadius: '10px',
               textTransform: 'none',
-              fontSize: '1.1rem',
+              fontSize: '1rem',
               fontWeight: 'bold',
               background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
               boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+              minWidth: '200px',
+              width: { xs: '100%', md: 'auto' }
             }}
           >
-            {loading ? 'Saving Records...' : 'Save Milk Records'}
+            {loading ? 'Saving...' : 'Save Production'}
           </Button>
         </Box>
       </Paper>

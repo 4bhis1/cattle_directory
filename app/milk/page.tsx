@@ -1,4 +1,4 @@
-import MilkStatsForm from "../form/mils_stats_form";
+import MilkStatsForm from "../form/milk_stats_form";
 
 export default function MilkPage() {
   return <MilkStatsForm />;
