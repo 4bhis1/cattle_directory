@@ -371,7 +371,7 @@ export default function MilkAnalyticsPage() {
                 </DialogTitle>
                 <DialogContent dividers>
                     <Grid container spacing={4}>
-                        <Grid xs={12} md={8}>
+                        <Grid size={{ xs: 12, md: 8 }}>
                             <Typography variant="h6" className="mb-4">Production Trend</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={chartData as any[]}>
@@ -384,12 +384,12 @@ export default function MilkAnalyticsPage() {
                                 </LineChart>
                             </ResponsiveContainer>
                         </Grid>
-                        <Grid xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <Typography variant="h6" className="mb-4">Session Split</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
-                                        data={pieData}
+                                        data={pieData as any[]}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}

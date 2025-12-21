@@ -333,7 +333,7 @@ export default function WasteAnalyticsPage() {
                 </DialogTitle>
                 <DialogContent dividers>
                     <Grid container spacing={4}>
-                        <Grid item xs={12} md={8}>
+                        <Grid size={{ xs: 12, md: 8 }}>
                             <Typography variant="h6" className="mb-4">Daily Collection</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={chartData as any[]}>
@@ -346,12 +346,12 @@ export default function WasteAnalyticsPage() {
                                 </BarChart>
                             </ResponsiveContainer>
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <Typography variant="h6" className="mb-4">By Type</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
-                                        data={pieData}
+                                        data={pieData as any[]}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}

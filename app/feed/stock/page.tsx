@@ -278,7 +278,7 @@ export default function FeedStockPage() {
                     {/* Quick Stats */}
                     {!loading && (
                         <Grid container spacing={3} className="mt-4 pb-2">
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <Paper className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
                                     <Box>
                                         <Typography variant="caption" className="text-blue-600 font-bold uppercase tracking-wider">Total Inventory Value</Typography>
@@ -289,7 +289,7 @@ export default function FeedStockPage() {
                                     </Box>
                                 </Paper>
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <Paper className="p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-between">
                                     <Box>
                                         <Typography variant="caption" className="text-orange-600 font-bold uppercase tracking-wider">Low Stock Items</Typography>
@@ -300,7 +300,7 @@ export default function FeedStockPage() {
                                     </Box>
                                 </Paper>
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <Paper className="p-4 bg-purple-50 border border-purple-100 rounded-xl flex items-center justify-between">
                                     <Box>
                                         <Typography variant="caption" className="text-purple-600 font-bold uppercase tracking-wider">Feed Varieties</Typography>
@@ -342,7 +342,7 @@ export default function FeedStockPage() {
                             {activeTab === 'inventory' && (
                                 <Grid container spacing={3}>
                                     {inventory.map((item) => (
-                                        <Grid item xs={12} md={6} lg={4} key={item.feedTypeId}>
+                                        <Grid size={{ xs: 12, md: 6, lg: 4 }} key={item.feedTypeId}>
                                             <Paper elevation={0} className="border border-gray-200 rounded-xl p-0 overflow-hidden hover:shadow-lg transition-shadow">
                                                 <Box className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                                                     <Box className="flex justify-between items-start">
@@ -362,13 +362,13 @@ export default function FeedStockPage() {
                                                 </Box>
                                                 <Box className="p-5">
                                                     <Grid container spacing={2}>
-                                                        <Grid item xs={6}>
+                                                        <Grid size={{ xs: 6 }}>
                                                             <Typography variant="caption" className="text-gray-400 uppercase font-bold">In Stock</Typography>
                                                             <Typography variant="h5" className="font-bold text-gray-800">
                                                                 {item.currentStock} <span className="text-sm text-gray-400 font-normal">{item.unit}</span>
                                                             </Typography>
                                                         </Grid>
-                                                        <Grid item xs={6}>
+                                                        <Grid size={{ xs: 6 }}>
                                                             <Typography variant="caption" className="text-gray-400 uppercase font-bold">Avg Cost</Typography>
                                                             <Typography variant="h5" className="font-bold text-gray-800">
                                                                 ₹{item.avgCost.toFixed(1)} <span className="text-sm text-gray-400 font-normal">/{item.unit}</span>
@@ -460,7 +460,7 @@ export default function FeedStockPage() {
                 <DialogContent className="py-6">
                     <Grid container spacing={3} className="mt-1">
                         {/* Date & Time */}
-                        <Grid item xs={6}>
+                        <Grid size={{ xs: 6 }}>
                             <TextField
                                 label="Date"
                                 type="date"
@@ -470,7 +470,7 @@ export default function FeedStockPage() {
                                 InputLabelProps={{ shrink: true }}
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid size={{ xs: 6 }}>
                             <TextField
                                 label="Time"
                                 type="time"
@@ -482,7 +482,7 @@ export default function FeedStockPage() {
                         </Grid>
 
                         {/* Feed Type Selection */}
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             {isNewTypeMode ? (
                                 <Box className="flex gap-2 items-start">
                                     <TextField
@@ -535,7 +535,7 @@ export default function FeedStockPage() {
                         </Grid>
 
                         {/* Quantity & Rate */}
-                        <Grid item xs={6}>
+                        <Grid size={{ xs: 6 }}>
                             <TextField
                                 label="Quantity"
                                 type="number"
@@ -547,7 +547,7 @@ export default function FeedStockPage() {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid size={{ xs: 6 }}>
                             <TextField
                                 label="Price per Unit"
                                 type="number"
@@ -561,7 +561,7 @@ export default function FeedStockPage() {
                         </Grid>
 
                         {/* Total Cost Preview */}
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <Paper className="p-3 bg-gray-50 flex justify-between items-center border border-gray-200 rounded-lg">
                                 <Typography variant="body2" className="text-gray-600 font-medium">Total Cost:</Typography>
                                 <Typography variant="h6" className="text-green-600 font-bold">
@@ -571,7 +571,7 @@ export default function FeedStockPage() {
                         </Grid>
 
                         {/* Vendor & Notes */}
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextField
                                 label="Vendor / Source"
                                 fullWidth
@@ -580,7 +580,7 @@ export default function FeedStockPage() {
                                 placeholder="e.g. Local Market"
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <TextField
                                 label="Notes"
                                 fullWidth

@@ -133,7 +133,7 @@ export default function ProfitAnalyticsPage() {
 
                     {/* Stats Cards */}
                     <Grid container spacing={3} className="mb-6">
-                        <Grid item xs={12} sm={6} md={3}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card elevation={3} sx={{ borderRadius: '16px', background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)' }}>
                                 <CardContent>
                                     <Typography variant="body2" className="text-gray-600 mb-1">Total Revenue</Typography>
@@ -141,7 +141,7 @@ export default function ProfitAnalyticsPage() {
                                 </CardContent>
                             </Card>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card elevation={3} sx={{ borderRadius: '16px', background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}>
                                 <CardContent>
                                     <Typography variant="body2" className="text-gray-600 mb-1">Total Expenses</Typography>
@@ -149,7 +149,7 @@ export default function ProfitAnalyticsPage() {
                                 </CardContent>
                             </Card>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card elevation={3} sx={{ borderRadius: '16px', background: stats.netProfit >= 0 ? 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' : 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}>
                                 <CardContent>
                                     <Typography variant="body2" className="text-gray-600 mb-1">Net Profit</Typography>
@@ -159,7 +159,7 @@ export default function ProfitAnalyticsPage() {
                                 </CardContent>
                             </Card>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card elevation={3} sx={{ borderRadius: '16px', background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)' }}>
                                 <CardContent>
                                     <Typography variant="body2" className="text-gray-600 mb-1">Profit Margin</Typography>
@@ -171,7 +171,7 @@ export default function ProfitAnalyticsPage() {
 
                     {/* Charts */}
                     <Grid container spacing={3} className="mb-6">
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <Paper elevation={3} className="p-8 bg-white rounded-2xl">
                                 <Typography variant="h6" className="font-bold mb-4 text-gray-800">Financial Overview (Revenue vs Expenses)</Typography>
                                 <ResponsiveContainer width="100%" height={400}>
@@ -197,7 +197,7 @@ export default function ProfitAnalyticsPage() {
                                 </ResponsiveContainer>
                             </Paper>
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <Paper elevation={3} className="p-8 bg-white rounded-2xl">
                                 <Typography variant="h6" className="font-bold mb-4 text-gray-800">Net Profit Trend</Typography>
                                 <ResponsiveContainer width="100%" height={300}>

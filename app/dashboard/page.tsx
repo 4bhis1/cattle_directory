@@ -146,7 +146,7 @@ export default function DashboardPage() {
 
                 {/* Stats Cards */}
                 <Grid container spacing={3} className="mb-6">
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Card
                             elevation={3}
                             sx={{
@@ -170,7 +170,7 @@ export default function DashboardPage() {
                         </Card>
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Card
                             elevation={3}
                             sx={{
@@ -194,7 +194,7 @@ export default function DashboardPage() {
                         </Card>
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Card
                             elevation={3}
                             sx={{
@@ -218,7 +218,7 @@ export default function DashboardPage() {
                         </Card>
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Card
                             elevation={3}
                             sx={{

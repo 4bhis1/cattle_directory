@@ -1,4 +1,4 @@
-import MilkStatsForm from '../../form/mils_stats_form';
+import MilkStatsForm from '../../form/milk_stats_form';
 
 interface MilkDatePageProps {
   params: Promise<{
@@ -8,7 +8,7 @@ interface MilkDatePageProps {
 
 export default async function MilkDatePage({ params }: MilkDatePageProps) {
   const { date } = await params;
-  
+
   // Parse date from mm-dd-yyyy format
   const parseDate = (dateStr: string): string => {
     const parts = dateStr.split('-');

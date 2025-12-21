@@ -346,7 +346,7 @@ export default function ExpensesAnalyticsPage() {
                 </DialogTitle>
                 <DialogContent dividers>
                     <Grid container spacing={4}>
-                        <Grid item xs={12} md={8}>
+                        <Grid size={{ xs: 12, md: 8 }}>
                             <Typography variant="h6" className="mb-4">Daily Expenses</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={chartData as any[]}>
@@ -359,12 +359,12 @@ export default function ExpensesAnalyticsPage() {
                                 </BarChart>
                             </ResponsiveContainer>
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <Typography variant="h6" className="mb-4">By Category</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
-                                        data={pieData}
+                                        data={pieData as any[]}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}

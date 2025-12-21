@@ -452,7 +452,7 @@ export default function FeedAnalyticsPage() {
                 </DialogTitle>
                 <DialogContent dividers>
                     <Grid container spacing={4}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <Typography variant="h6" className="mb-4">Stock Levels</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={stockChartData}>
@@ -466,12 +466,12 @@ export default function FeedAnalyticsPage() {
                                 </BarChart>
                             </ResponsiveContainer>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <Typography variant="h6" className="mb-4">Consumption by Cattle</Typography>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
-                                        data={consumptionPieData}
+                                        data={consumptionPieData as any[]}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}
