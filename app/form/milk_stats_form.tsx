@@ -103,6 +103,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
   });
 
   const targetCattleId = searchParams.get('cattleId');
+  const isReadOnly = searchParams.get('readonly') === 'true';
 
   // Fetch cattle on component mount
   useEffect(() => {
@@ -151,41 +152,41 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
     }
   };
 
+  const fetchMilkData = async () => {
+    if (cattle.length === 0) return;
+
+    try {
+      setFetchingCattle(true);
+      const res = await fetch(`/api/milk?date=${date}`);
+      const data = await res.json();
+      const milkRecords = data.success ? data.data : [];
+
+      const newMilkData = cattle.map((c) => {
+        const morningRecord = milkRecords.find((r: any) => r.cattleId === c._id && r.milkingSession === 'morning');
+        const eveningRecord = milkRecords.find((r: any) => r.cattleId === c._id && r.milkingSession === 'evening');
+
+        return {
+          _id: c._id,
+          cattleId: c.cattleId,
+          name: c.name,
+          morningMilk: morningRecord ? morningRecord.quantity : 0,
+          morningFat: morningRecord ? (morningRecord.quality?.fat || 4.5) : 4.5,
+          eveningMilk: eveningRecord ? eveningRecord.quantity : 0,
+          eveningFat: eveningRecord ? (eveningRecord.quality?.fat || 4.5) : 4.5,
+          image: (c.images && c.images.length > 0) ? c.images[c.images.length - 1] : undefined,
+          status: typeof c.status === 'object' ? c.status.current : c.status
+        };
+      });
+      setMilkData(newMilkData);
+    } catch (error) {
+      console.error('Error fetching milk data:', error);
+    } finally {
+      setFetchingCattle(false);
+    }
+  };
+
   // Fetch milk data when cattle or date changes
   useEffect(() => {
-    const fetchMilkData = async () => {
-      if (cattle.length === 0) return;
-
-      try {
-        setFetchingCattle(true);
-        const res = await fetch(`/api/milk?date=${date}`);
-        const data = await res.json();
-        const milkRecords = data.success ? data.data : [];
-
-        const newMilkData = cattle.map((c) => {
-          const morningRecord = milkRecords.find((r: any) => r.cattleId === c._id && r.milkingSession === 'morning');
-          const eveningRecord = milkRecords.find((r: any) => r.cattleId === c._id && r.milkingSession === 'evening');
-
-          return {
-            _id: c._id,
-            cattleId: c.cattleId,
-            name: c.name,
-            morningMilk: morningRecord ? morningRecord.quantity : 0,
-            morningFat: morningRecord ? (morningRecord.quality?.fat || 4.5) : 4.5,
-            eveningMilk: eveningRecord ? eveningRecord.quantity : 0,
-            eveningFat: eveningRecord ? (eveningRecord.quality?.fat || 4.5) : 4.5,
-            image: (c.images && c.images.length > 0) ? c.images[c.images.length - 1] : undefined,
-            status: typeof c.status === 'object' ? c.status.current : c.status
-          };
-        });
-        setMilkData(newMilkData);
-      } catch (error) {
-        console.error('Error fetching milk data:', error);
-      } finally {
-        setFetchingCattle(false);
-      }
-    };
-
     fetchMilkData();
   }, [cattle, date]);
 
@@ -306,14 +307,8 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
       });
 
       // Reset form after successful submission
-      // Refresh data instead of resetting to 0
-      setTimeout(() => {
-        // Trigger re-fetch by keeping date same? 
-        // Actually, relying on useEffect might not work if dependencies haven't changed.
-        // We should manually call fetch or just update local state if we want.
-        // Or forces update.
-        // Simplest is to just do nothing and keep the values, as they are now "Saved".
-      }, 500);
+      // Refresh data
+      fetchMilkData();
     } catch (error) {
       console.error('Error saving milk records:', error);
       setSnackbar({
@@ -374,6 +369,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                 onChange={handleDateChange}
                 variant="standard"
                 InputProps={{ disableUnderline: true }}
+                disabled={isReadOnly}
                 sx={{ '& input': { fontSize: '1.1rem', fontWeight: 600, color: '#1e40af' } }}
               />
             </Paper>
@@ -458,6 +454,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                               <TextField
                                 type="number"
                                 value={cow.morningMilk}
+                                disabled={isReadOnly}
                                 onChange={(e) => handleInputChange(cow.cattleId, 'morningMilk', e.target.value)}
                                 inputProps={{ min: 0, step: 0.1 }}
                                 size="small"
@@ -471,6 +468,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                               <TextField
                                 type="number"
                                 value={cow.morningFat}
+                                disabled={isReadOnly}
                                 onChange={(e) => handleInputChange(cow.cattleId, 'morningFat', e.target.value)}
                                 inputProps={{ min: 0, step: 0.1 }}
                                 size="small"
@@ -483,6 +481,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                               <TextField
                                 type="number"
                                 value={cow.eveningMilk}
+                                disabled={isReadOnly}
                                 onChange={(e) => handleInputChange(cow.cattleId, 'eveningMilk', e.target.value)}
                                 inputProps={{ min: 0, step: 0.1 }}
                                 size="small"
@@ -496,6 +495,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                               <TextField
                                 type="number"
                                 value={cow.eveningFat}
+                                disabled={isReadOnly}
                                 onChange={(e) => handleInputChange(cow.cattleId, 'eveningFat', e.target.value)}
                                 inputProps={{ min: 0, step: 0.1 }}
                                 size="small"
@@ -528,7 +528,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
           text: 'Save Production',
           onClick: () => handleSubmit(),
           loading: loading,
-          disabled: loading
+          disabled: loading || isReadOnly
         }}
       />
 
