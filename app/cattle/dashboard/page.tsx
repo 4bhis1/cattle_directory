@@ -33,13 +33,17 @@ interface Cattle {
     cattleId: string;
     name: string;
     breed: string;
-    status: string;
+    status: string | { current: string; history: any[] };
     motherId?: string;
     children?: Cattle[];
+    dateOfBirth?: string;
+    expectedMilkProduction?: number;
+    numberOfBirths?: number;
     // Mock stats
     lastMilk?: number;
     lastFeed?: number;
     lastWaste?: number;
+    images?: string[];
 }
 
 export default function CattleDashboard() {
@@ -91,7 +95,17 @@ export default function CattleDashboard() {
         }
     };
 
+    const calculateAge = (dobString?: string) => {
+        if (!dobString) return 'N/A';
+        const dob = new Date(dobString);
+        const diff = Date.now() - dob.getTime();
+        const ageDate = new Date(diff);
+        return Math.abs(ageDate.getUTCFullYear() - 1970) + ' yrs';
+    };
+
     const renderCattleCard = (cow: Cattle, depth = 0) => {
+        const currentStatus = typeof cow.status === 'object' ? (cow.status as any).current : cow.status;
+
         return (
             <React.Fragment key={cow._id}>
                 <Paper
@@ -108,6 +122,7 @@ export default function CattleDashboard() {
                                     bgcolor: depth > 0 ? '#e0f2fe' : '#f3e8ff',
                                     color: depth > 0 ? '#0284c7' : '#9333ea'
                                 }}
+                                src={cow.images && cow.images.length > 0 ? cow.images[cow.images.length - 1] : undefined}
                             >
                                 <Pets />
                             </Avatar>
@@ -117,16 +132,21 @@ export default function CattleDashboard() {
                                         {cow.name}
                                     </Typography>
                                     <Chip
-                                        label={cow.status}
+                                        label={currentStatus}
                                         size="small"
-                                        color={cow.status === 'active' ? 'success' : 'warning'}
+                                        color={currentStatus === 'active' ? 'success' : currentStatus === 'pregnant' ? 'warning' : currentStatus === 'dry' ? 'default' : 'default'}
                                         variant="outlined"
                                         sx={{ height: 20, fontSize: '0.65rem' }}
                                     />
                                 </Box>
-                                <Typography variant="caption" className="text-gray-500 block">
-                                    ID: {cow.cattleId} • {cow.breed}
+                                <Typography variant="caption" className="text-gray-500 block mt-1">
+                                    ID: {cow.cattleId} • {cow.breed} • {calculateAge(cow.dateOfBirth)}
                                 </Typography>
+                                {(cow.expectedMilkProduction || cow.numberOfBirths) && (
+                                    <Typography variant="caption" className="text-gray-500 block">
+                                        Exp. Milk: {cow.expectedMilkProduction || 0}L • Births: {cow.numberOfBirths || 0}
+                                    </Typography>
+                                )}
 
                                 {/* Clickable Stats */}
                                 <Box className="flex gap-4 mt-3 flex-wrap">
@@ -148,6 +168,7 @@ export default function CattleDashboard() {
                                             {cow.lastFeed}kg (Today)
                                         </Typography>
                                     </Box>
+                                    {/* 
                                     <Box
                                         className="flex items-center gap-1 cursor-pointer hover:bg-red-50 px-2 py-1 rounded-md transition-colors"
                                         onClick={() => router.push(`/waste/add?cattleId=${cow._id}`)}
@@ -157,6 +178,7 @@ export default function CattleDashboard() {
                                             {cow.lastWaste}kg (Today)
                                         </Typography>
                                     </Box>
+                                    */}
                                 </Box>
                             </Box>
                         </Box>
@@ -181,6 +203,7 @@ export default function CattleDashboard() {
                                     <Restaurant fontSize="small" />
                                 </IconButton>
                             </Tooltip>
+                            {/* 
                             <Tooltip title="Add Medicine">
                                 <IconButton
                                     size="small"
@@ -190,6 +213,7 @@ export default function CattleDashboard() {
                                     <Medication fontSize="small" />
                                 </IconButton>
                             </Tooltip>
+                            */}
                             <Tooltip title="Edit Details">
                                 <IconButton
                                     size="small"

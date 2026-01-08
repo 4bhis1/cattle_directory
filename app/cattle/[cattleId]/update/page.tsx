@@ -1,4 +1,4 @@
-import CattleForm from '../../../form/cattle_form';
+import CattleForm from '../../../form/cattle_form_new';
 
 interface UpdateCattlePageProps {
   params: Promise<{

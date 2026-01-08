@@ -1,27 +1,38 @@
 import { NextResponse } from 'next/server';
-import { db, Customer } from '@/lib/mockData';
+import { fetchFromBackend } from '@/lib/backend';
 
 export async function GET() {
-    return NextResponse.json({ success: true, data: db.customers });
+    try {
+        const backendRes = await fetchFromBackend('/customers');
+        return NextResponse.json({
+            success: true,
+            data: backendRes.data.data
+        });
+    } catch (error) {
+        console.error('Error fetching customers:', error);
+        return NextResponse.json(
+            { success: false, error: 'Failed to fetch customers' },
+            { status: 500 }
+        );
+    }
 }
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
+        const backendRes = await fetchFromBackend('/customers', {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
 
-        const newCustomer: Customer = {
-            _id: Math.random().toString(36).substr(2, 9),
-            ...body,
-            joinDate: body.joinDate || new Date().toISOString().split('T')[0],
-            status: body.status || 'active'
-        };
-
-        db.customers.push(newCustomer);
-
-        return NextResponse.json({ success: true, data: newCustomer });
+        return NextResponse.json({
+            success: true,
+            data: backendRes.data.data
+        }, { status: 201 });
     } catch (error) {
+        console.error('Error creating customer:', error);
         return NextResponse.json(
-            { success: false, message: 'Failed to create customer' },
+            { success: false, error: 'Failed to create customer' },
             { status: 500 }
         );
     }

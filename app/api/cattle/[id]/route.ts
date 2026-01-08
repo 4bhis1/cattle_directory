@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockData, Cattle } from '@/lib/mockData';
+import { fetchFromBackend } from '@/lib/backend';
 
 interface RouteParams {
   params: Promise<{
@@ -11,16 +11,9 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const cattle = mockData.cattle.find(c => c._id === id);
+    const backendRes = await fetchFromBackend(`/cattle/${id}`);
 
-    if (!cattle) {
-      return NextResponse.json(
-        { success: false, error: 'Cattle not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: cattle }, { status: 200 });
+    return NextResponse.json({ success: true, data: backendRes.data.data }, { status: 200 });
   } catch (error) {
     console.error('Error fetching cattle:', error);
     return NextResponse.json(
@@ -32,30 +25,26 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // PUT /api/cattle/[id] - Update cattle
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  return updateCattle(request, params);
+}
+
+// PATCH /api/cattle/[id] - Update cattle
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  return updateCattle(request, params);
+}
+
+async function updateCattle(request: NextRequest, params: Promise<{ id: string }>) {
   try {
     const { id } = await params;
     const body = await request.json();
 
-    const cattleIndex = mockData.cattle.findIndex(c => c._id === id);
-
-    if (cattleIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Cattle not found' },
-        { status: 404 }
-      );
-    }
-
-    const updatedCattle: Cattle = {
-      ...mockData.cattle[cattleIndex],
-      ...body,
-      _id: id,
-      updatedAt: new Date().toISOString()
-    };
-
-    mockData.cattle[cattleIndex] = updatedCattle;
+    const backendRes = await fetchFromBackend(`/cattle/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body)
+    });
 
     return NextResponse.json(
-      { success: true, data: updatedCattle },
+      { success: true, data: backendRes.data.data },
       { status: 200 }
     );
   } catch (error) {
@@ -72,16 +61,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
 
-    const cattleIndex = mockData.cattle.findIndex(c => c._id === id);
-
-    if (cattleIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Cattle not found' },
-        { status: 404 }
-      );
-    }
-
-    mockData.cattle.splice(cattleIndex, 1);
+    await fetchFromBackend(`/cattle/${id}`, {
+      method: 'DELETE'
+    });
 
     return NextResponse.json(
       { success: true, message: 'Cattle deleted successfully' },

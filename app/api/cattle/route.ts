@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
-import { mockData, generateId, Cattle } from '@/lib/mockData';
+import { fetchFromBackend } from '@/lib/backend';
 
 // GET /api/cattle - Get all cattle
 export async function GET() {
   try {
+    const backendRes = await fetchFromBackend('/cattle');
+
+    // Transform backend response to match frontend expectation
+    // Backend: { status: 'success', results: N, data: { data: [...] } }
+    // Frontend Expects: { success: true, data: [...] }
+
     return NextResponse.json({
       success: true,
-      data: mockData.cattle
+      data: backendRes.data.data
     });
   } catch (error) {
     console.error('Error fetching cattle:', error);
@@ -22,18 +28,17 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const newCattle: Cattle = {
-      ...body,
-      _id: generateId(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    // Backend expects specific fields. 
+    // Ideally validation happens here, but we pass it through.
 
-    mockData.cattle.push(newCattle);
+    const backendRes = await fetchFromBackend('/cattle', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
 
     return NextResponse.json({
       success: true,
-      data: newCattle
+      data: backendRes.data.data
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating cattle:', error);
@@ -43,4 +48,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
 

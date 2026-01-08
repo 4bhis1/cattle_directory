@@ -1,24 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockData, generateId, Milk } from '@/lib/mockData';
+import { fetchFromBackend } from '@/lib/backend';
 
 // GET /api/milk - Get all milk records (with optional date filter)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date');
-    const cattleId = searchParams.get('cattleId');
+    const queryString = searchParams.toString();
+    const endpoint = queryString ? `/milk?${queryString}` : '/milk';
 
-    let filteredMilk = mockData.milk;
+    const backendRes = await fetchFromBackend(endpoint);
 
-    if (date) {
-      filteredMilk = filteredMilk.filter(m => m.date === date);
-    }
-
-    if (cattleId) {
-      filteredMilk = filteredMilk.filter(m => m.cattleId === cattleId);
-    }
-
-    return NextResponse.json({ success: true, data: filteredMilk }, { status: 200 });
+    return NextResponse.json({ success: true, data: backendRes.data.data }, { status: 200 });
   } catch (error) {
     console.error('Error fetching milk records:', error);
     return NextResponse.json(
@@ -33,18 +25,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const newMilk: Milk = {
-      ...body,
-      _id: generateId(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    mockData.milk.push(newMilk);
+    const backendRes = await fetchFromBackend('/milk', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
 
     return NextResponse.json({
       success: true,
-      data: newMilk
+      data: backendRes.data.data
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating milk record:', error);
@@ -54,5 +42,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

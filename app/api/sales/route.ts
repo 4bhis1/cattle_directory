@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { mockData, generateId, Sales } from '@/lib/mockData';
+import { fetchFromBackend } from '@/lib/backend';
 
-// GET /api/sales
 export async function GET() {
     try {
+        const backendRes = await fetchFromBackend('/finance/sales');
         return NextResponse.json({
             success: true,
-            data: mockData.sales
+            data: backendRes.data.data
         });
     } catch (error) {
         console.error('Error fetching sales:', error);
@@ -17,23 +17,17 @@ export async function GET() {
     }
 }
 
-// POST /api/sales
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-
-        const newSale: Sales = {
-            ...body,
-            _id: generateId(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        mockData.sales.push(newSale);
+        const backendRes = await fetchFromBackend('/finance/sales', {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
 
         return NextResponse.json({
             success: true,
-            data: newSale
+            data: backendRes.data.data
         }, { status: 201 });
     } catch (error) {
         console.error('Error creating sale:', error);

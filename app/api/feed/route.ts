@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { mockData, generateId, Feed } from '@/lib/mockData';
+import { fetchFromBackend } from '@/lib/backend';
 
 // GET /api/feed - Get all feed
 export async function GET() {
     try {
+        const backendRes = await fetchFromBackend('/feeds');
         return NextResponse.json({
             success: true,
-            data: mockData.feed
+            data: backendRes.data.data
         });
     } catch (error) {
         console.error('Error fetching feed:', error);
@@ -22,18 +23,14 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const newFeed: Feed = {
-            ...body,
-            _id: generateId(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        mockData.feed.push(newFeed);
+        const backendRes = await fetchFromBackend('/feeds', {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
 
         return NextResponse.json({
             success: true,
-            data: newFeed
+            data: backendRes.data.data
         }, { status: 201 });
     } catch (error) {
         console.error('Error creating feed:', error);

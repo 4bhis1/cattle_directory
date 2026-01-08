@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { mockData, generateId, MedicineApplication } from '@/lib/mockData';
+import { fetchFromBackend } from '@/lib/backend';
 
-// GET /api/medicine-application
 export async function GET() {
     try {
+        const backendRes = await fetchFromBackend('/medicine-applications');
         return NextResponse.json({
             success: true,
-            data: mockData.medicineApplication
+            data: backendRes.data.data
         });
     } catch (error) {
         console.error('Error fetching medicine applications:', error);
@@ -17,23 +17,17 @@ export async function GET() {
     }
 }
 
-// POST /api/medicine-application
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-
-        const newApplication: MedicineApplication = {
-            ...body,
-            _id: generateId(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        mockData.medicineApplication.push(newApplication);
+        const backendRes = await fetchFromBackend('/medicine-applications', {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
 
         return NextResponse.json({
             success: true,
-            data: newApplication
+            data: backendRes.data.data
         }, { status: 201 });
     } catch (error) {
         console.error('Error creating medicine application:', error);

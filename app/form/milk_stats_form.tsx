@@ -42,6 +42,8 @@ interface Cattle {
   _id: string;
   cattleId: string;
   name: string;
+  status?: { current: string };
+  images?: string[];
 }
 
 interface MilkData {
@@ -49,8 +51,11 @@ interface MilkData {
   cattleId: string;
   name: string;
   morningMilk: number;
+  morningFat: number;
   eveningMilk: number;
-  ratePerLiter: number;
+  eveningFat: number;
+  image?: string;
+  status?: string;
 }
 
 type SnackbarSeverity = 'success' | 'error' | 'warning' | 'info';
@@ -69,7 +74,9 @@ const currencyInputProps = {
 };
 
 export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
+  const searchParams = useSearchParams();
   const router = useRouter();
+
   // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
@@ -79,7 +86,8 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
     return `${year}-${month}-${day}`;
   };
 
-  const [date, setDate] = useState(initialDate || getTodayDate());
+  const urlDate = searchParams.get('date');
+  const [date, setDate] = useState(urlDate || initialDate || getTodayDate());
   const [cattle, setCattle] = useState<Cattle[]>([]);
   const [milkData, setMilkData] = useState<MilkData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -94,7 +102,6 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
     severity: 'success',
   });
 
-  const searchParams = useSearchParams();
   const targetCattleId = searchParams.get('cattleId');
 
   // Fetch cattle on component mount
@@ -112,19 +119,25 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
         let cattleList = data.data;
         if (targetCattleId) {
           cattleList = cattleList.filter((c: Cattle) => c._id === targetCattleId);
+        } else {
+          // Filter: only Active and Pregnant
+          const allowed = ['active', 'pregnant'];
+          cattleList = cattleList.filter((c: Cattle) => {
+            const s = (typeof c.status === 'object' ? c.status.current : c.status)?.toLowerCase() || '';
+            return allowed.includes(s);
+          });
+          // Sort: Active first, then Pregnant
+          cattleList.sort((a: Cattle, b: Cattle) => {
+            const sA = (typeof a.status === 'object' ? a.status.current : a.status)?.toLowerCase();
+            const sB = (typeof b.status === 'object' ? b.status.current : b.status)?.toLowerCase();
+            if (sA === 'active' && sB !== 'active') return -1;
+            if (sA !== 'active' && sB === 'active') return 1;
+            return 0;
+          });
         }
+
         setCattle(cattleList);
-        // Initialize milk data for each cattle
-        setMilkData(
-          cattleList.map((c: Cattle) => ({
-            _id: c._id,
-            cattleId: c.cattleId,
-            name: c.name,
-            morningMilk: 0,
-            eveningMilk: 0,
-            ratePerLiter: 45, // default rate
-          }))
-        );
+        // Milk data initialization is now handled by the useEffect dependent on [cattle, date]
       }
     } catch (error) {
       console.error('Error fetching cattle:', error);
@@ -138,8 +151,54 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
     }
   };
 
+  // Fetch milk data when cattle or date changes
+  useEffect(() => {
+    const fetchMilkData = async () => {
+      if (cattle.length === 0) return;
+
+      try {
+        setFetchingCattle(true);
+        const res = await fetch(`/api/milk?date=${date}`);
+        const data = await res.json();
+        const milkRecords = data.success ? data.data : [];
+
+        const newMilkData = cattle.map((c) => {
+          const morningRecord = milkRecords.find((r: any) => r.cattleId === c._id && r.milkingSession === 'morning');
+          const eveningRecord = milkRecords.find((r: any) => r.cattleId === c._id && r.milkingSession === 'evening');
+
+          return {
+            _id: c._id,
+            cattleId: c.cattleId,
+            name: c.name,
+            morningMilk: morningRecord ? morningRecord.quantity : 0,
+            morningFat: morningRecord ? (morningRecord.quality?.fat || 4.5) : 4.5,
+            eveningMilk: eveningRecord ? eveningRecord.quantity : 0,
+            eveningFat: eveningRecord ? (eveningRecord.quality?.fat || 4.5) : 4.5,
+            image: (c.images && c.images.length > 0) ? c.images[c.images.length - 1] : undefined,
+            status: typeof c.status === 'object' ? c.status.current : c.status
+          };
+        });
+        setMilkData(newMilkData);
+      } catch (error) {
+        console.error('Error fetching milk data:', error);
+      } finally {
+        setFetchingCattle(false);
+      }
+    };
+
+    fetchMilkData();
+  }, [cattle, date]);
+
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDate(e.target.value);
+    const newDate = e.target.value;
+    setDate(newDate);
+    const params = new URLSearchParams(searchParams.toString());
+    if (newDate) {
+      params.set('date', newDate);
+    } else {
+      params.delete('date');
+    }
+    router.replace(`?${params.toString()}`);
   };
 
   const handleInputChange = (
@@ -159,11 +218,7 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
     (sum, cow) => sum + cow.morningMilk + cow.eveningMilk,
     0
   );
-  const totalCost = milkData.reduce(
-    (sum, cow) =>
-      sum + (cow.morningMilk + cow.eveningMilk) * cow.ratePerLiter,
-    0
-  );
+  const totalCost = 0; // Usage removed or calc differently if needed
 
   const totalMorningMilk = milkData.reduce((sum, cow) => sum + cow.morningMilk, 0);
   const totalEveningMilk = milkData.reduce((sum, cow) => sum + cow.eveningMilk, 0);
@@ -188,38 +243,59 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
 
     try {
       // Save each cattle's milk record
-      const promises = milkData
-        .filter(cow => cow.morningMilk > 0 || cow.eveningMilk > 0) // Only save if there's milk
-        .map(async (cow) => {
-          const totalQuantity = cow.morningMilk + cow.eveningMilk;
-          const milkRecord = {
-            cattleId: cow._id,
-            milkingSession: cow.morningMilk > cow.eveningMilk ? 'morning' : 'evening',
-            date: date,
-            quantity: totalQuantity,
-            quality: {
-              fat: 4.5,
-              snf: 8.5,
-              temperature: 35
-            },
-            soldTo: 'dairy',
-            pricePerLiter: cow.ratePerLiter,
-            totalAmount: totalQuantity * cow.ratePerLiter,
-            paymentStatus: 'pending',
-            notes: `Morning: ${cow.morningMilk}L, Evening: ${cow.eveningMilk}L`,
-            recordedBy: 'Admin'
-          };
+      const promises = [];
 
-          const response = await fetch('/api/milk', {
+      for (const cow of milkData) {
+        // Morning Record
+        if (cow.morningMilk > 0) {
+          promises.push(fetch('/api/milk', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(milkRecord),
-          });
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cattleId: cow._id,
+              milkingSession: 'morning',
+              date: date,
+              quantity: cow.morningMilk,
+              quality: {
+                fat: cow.morningFat,
+                snf: 8.5,
+                temperature: 35
+              },
+              soldTo: 'dairy',
+              pricePerLiter: 0,
+              totalAmount: 0,
+              paymentStatus: 'pending',
+              notes: `Session: Morning, Qty: ${cow.morningMilk}L, Fat: ${cow.morningFat}%`,
+              recordedBy: 'Admin'
+            })
+          }).then(res => res.json()));
+        }
 
-          return response.json();
-        });
+        // Evening Record
+        if (cow.eveningMilk > 0) {
+          promises.push(fetch('/api/milk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cattleId: cow._id,
+              milkingSession: 'evening',
+              date: date,
+              quantity: cow.eveningMilk,
+              quality: {
+                fat: cow.eveningFat,
+                snf: 8.5,
+                temperature: 35
+              },
+              soldTo: 'dairy',
+              pricePerLiter: 0,
+              totalAmount: 0,
+              paymentStatus: 'pending',
+              notes: `Session: Evening, Qty: ${cow.eveningMilk}L, Fat: ${cow.eveningFat}%`,
+              recordedBy: 'Admin'
+            })
+          }).then(res => res.json()));
+        }
+      }
 
       await Promise.all(promises);
 
@@ -230,18 +306,14 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
       });
 
       // Reset form after successful submission
+      // Refresh data instead of resetting to 0
       setTimeout(() => {
-        setMilkData(
-          cattle.map((c) => ({
-            _id: c._id,
-            cattleId: c.cattleId,
-            name: c.name,
-            morningMilk: 0,
-            eveningMilk: 0,
-            ratePerLiter: 45,
-          }))
-        );
-      }, 1500);
+        // Trigger re-fetch by keeping date same? 
+        // Actually, relying on useEffect might not work if dependencies haven't changed.
+        // We should manually call fetch or just update local state if we want.
+        // Or forces update.
+        // Simplest is to just do nothing and keep the values, as they are now "Saved".
+      }, 500);
     } catch (error) {
       console.error('Error saving milk records:', error);
       setSnackbar({
@@ -317,35 +389,35 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                   <Table>
                     <TableHead className="bg-gray-50">
                       <TableRow>
-                        <TableCell className="font-bold text-gray-600 py-4">
+                        <TableCell rowSpan={2} className="font-bold text-gray-600 py-4">
                           <Box className="flex items-center">
                             <Pets sx={{ mr: 1, color: '#3b82f6' }} />
                             Cow Name
                           </Box>
                         </TableCell>
-                        <TableCell className="font-bold text-gray-600 py-4">
-                          <Box className="flex items-center">
-                            <LocalDrink sx={{ mr: 1, color: '#3b82f6' }} />
-                            Morning Milk (L)
+                        <TableCell colSpan={2} align="center" className="font-bold text-gray-600 py-2 border-l border-gray-200">
+                          <Box className="flex items-center justify-center text-blue-600">
+                            <LocalDrink sx={{ mr: 1 }} fontSize="small" />
+                            Morning
                           </Box>
                         </TableCell>
-                        <TableCell className="font-bold text-gray-600 py-4">
-                          <Box className="flex items-center">
-                            <LocalDrink sx={{ mr: 1, color: '#3b82f6' }} />
-                            Evening Milk (L)
+                        <TableCell colSpan={2} align="center" className="font-bold text-gray-600 py-2 border-l border-gray-200">
+                          <Box className="flex items-center justify-center text-purple-600">
+                            <LocalDrink sx={{ mr: 1 }} fontSize="small" />
+                            Evening
                           </Box>
                         </TableCell>
-                        <TableCell className="font-bold text-gray-600 py-4">
-                          <Box className="flex items-center">
-                            <AttachMoney sx={{ mr: 1, color: '#3b82f6' }} />
-                            Rate per Liter (₹)
-                          </Box>
-                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell align="center" className="text-sm text-gray-500 border-l border-gray-200">Qty (L)</TableCell>
+                        <TableCell align="center" className="text-sm text-gray-500">Fat (%)</TableCell>
+                        <TableCell align="center" className="text-sm text-gray-500 border-l border-gray-200">Qty (L)</TableCell>
+                        <TableCell align="center" className="text-sm text-gray-500">Fat (%)</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {fetchingCattle ? (
-                        <TableRow>
+                        <TableRow key="loading">
                           <TableCell colSpan={4} align="center" className="py-8">
                             <CircularProgress size={24} />
                           </TableCell>
@@ -359,66 +431,77 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
                           >
                             <TableCell>
                               <Box className="flex items-center">
-                                <Box className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3 text-purple-600">
-                                  <Pets fontSize="small" />
+                                <Box className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-3 overflow-hidden border border-gray-200">
+                                  {cow.image ? (
+                                    <img src={cow.image} alt={cow.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    <Pets fontSize="small" className="text-gray-400" />
+                                  )}
                                 </Box>
-                                <Typography variant="body1" className="font-semibold">
-                                  {cow.name}
-                                </Typography>
+                                <Box>
+                                  <Typography variant="body1" className="font-semibold text-gray-800">
+                                    {cow.name}
+                                  </Typography>
+                                  {cow.status && (
+                                    <Chip
+                                      label={cow.status}
+                                      size="small"
+                                      color={cow.status === 'active' ? 'success' : cow.status === 'pregnant' ? 'warning' : 'default'}
+                                      variant="outlined"
+                                      sx={{ height: 20, fontSize: '0.65rem', mt: 0.5 }}
+                                    />
+                                  )}
+                                </Box>
                               </Box>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="border-l border-gray-200">
                               <TextField
                                 type="number"
                                 value={cow.morningMilk}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    cow.cattleId,
-                                    'morningMilk',
-                                    e.target.value
-                                  )
-                                }
-                                inputProps={{ min: 0, step: 0.01 }}
+                                onChange={(e) => handleInputChange(cow.cattleId, 'morningMilk', e.target.value)}
+                                inputProps={{ min: 0, step: 0.1 }}
                                 size="small"
                                 fullWidth
-                                InputProps={literInputProps}
-                                sx={{ maxWidth: 150 }}
+                                InputProps={{ ...literInputProps, disableUnderline: true }}
+                                variant="outlined"
+                                sx={{ maxWidth: 100 }}
                               />
                             </TableCell>
                             <TableCell>
+                              <TextField
+                                type="number"
+                                value={cow.morningFat}
+                                onChange={(e) => handleInputChange(cow.cattleId, 'morningFat', e.target.value)}
+                                inputProps={{ min: 0, step: 0.1 }}
+                                size="small"
+                                fullWidth
+                                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                                sx={{ maxWidth: 90 }}
+                              />
+                            </TableCell>
+                            <TableCell className="border-l border-gray-200">
                               <TextField
                                 type="number"
                                 value={cow.eveningMilk}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    cow.cattleId,
-                                    'eveningMilk',
-                                    e.target.value
-                                  )
-                                }
-                                inputProps={{ min: 0, step: 0.01 }}
+                                onChange={(e) => handleInputChange(cow.cattleId, 'eveningMilk', e.target.value)}
+                                inputProps={{ min: 0, step: 0.1 }}
                                 size="small"
                                 fullWidth
-                                InputProps={literInputProps}
-                                sx={{ maxWidth: 150 }}
+                                InputProps={{ ...literInputProps, disableUnderline: true }}
+                                variant="outlined"
+                                sx={{ maxWidth: 100 }}
                               />
                             </TableCell>
                             <TableCell>
                               <TextField
                                 type="number"
-                                value={cow.ratePerLiter}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    cow.cattleId,
-                                    'ratePerLiter',
-                                    e.target.value
-                                  )
-                                }
-                                inputProps={{ min: 0, step: 0.01 }}
+                                value={cow.eveningFat}
+                                onChange={(e) => handleInputChange(cow.cattleId, 'eveningFat', e.target.value)}
+                                inputProps={{ min: 0, step: 0.1 }}
                                 size="small"
                                 fullWidth
-                                InputProps={currencyInputProps}
-                                sx={{ maxWidth: 150 }}
+                                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                                sx={{ maxWidth: 90 }}
                               />
                             </TableCell>
                           </TableRow>
@@ -438,8 +521,8 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
         stats={[
           { label: 'Morning', value: totalMorningMilk.toFixed(1), unit: 'L', valueColor: 'text-blue-600' },
           { label: 'Evening', value: totalEveningMilk.toFixed(1), unit: 'L', valueColor: 'text-purple-600' },
-          { label: 'Total', value: totalMilkProduced.toFixed(1), unit: 'L', valueColor: 'text-gray-800' },
-          { label: 'Income', value: `₹${totalCost.toFixed(0)}`, valueColor: 'text-green-600' }
+          { label: 'Total', value: totalMilkProduced.toFixed(1), unit: 'L', valueColor: 'text-gray-800' }
+          // Removed Income stat as rate is gone
         ]}
         submitButton={{
           text: 'Save Production',

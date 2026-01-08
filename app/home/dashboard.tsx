@@ -31,7 +31,6 @@ import AnalyticsSection from '../components/dashboard/AnalyticsSection';
 
 export default function DairyDashboard() {
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -44,10 +43,6 @@ export default function DairyDashboard() {
       document.documentElement.classList.add('dark');
     }
   }, []);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   const toggleTheme = () => {
     const newMode = !isDarkMode;
@@ -63,8 +58,6 @@ export default function DairyDashboard() {
 
   const navigateTo = (section: string) => {
     setActiveSection(section);
-    console.log('Navigating to:', section);
-
     // Navigate to the appropriate route
     const routeMap: { [key: string]: string } = {
       'feed': '/feed/add',
@@ -72,54 +65,19 @@ export default function DairyDashboard() {
       'cattle': '/cattle/add',
       'expense': '/expenses/add',
       'waste': '/waste/add',
-      'sales': '/sales/add',
+      'sales': '/sales/record',
       'dashboard': '/',
       'feed-stock': '/feed/stock'
     };
 
     const route = routeMap[section] || '/';
     router.push(route);
-
-    if (window.innerWidth <= 1024) {
-      setIsSidebarOpen(false);
-    }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (window.innerWidth <= 1024) {
-        const sidebar = document.getElementById('sidebar');
-        const menuToggle = document.querySelector(`.${styles.menuToggle}`);
-
-        if (sidebar && menuToggle &&
-          !sidebar.contains(e.target as Node) &&
-          !menuToggle.contains(e.target as Node) &&
-          isSidebarOpen) {
-          setIsSidebarOpen(false);
-        }
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [isSidebarOpen]);
 
   return (
     <div className={styles.pageContainer}>
-      <button className={styles.menuToggle} onClick={toggleSidebar}>
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
-      <Sidebar
-        isOpen={isSidebarOpen}
-        activeSection={activeSection}
-        onNavigate={navigateTo}
-      />
-
       {/* Main Content */}
-      <Box className="flex-1 overflow-auto bg-gray-50 dark:bg-slate-900 lg:ml-[280px] transition-all duration-300">
+      <Box className="flex-1 overflow-auto bg-gray-50 dark:bg-slate-900 transition-all duration-300">
         <Box className="p-8">
           <Box className="flex justify-between items-center mb-8">
             <Box>
@@ -134,7 +92,7 @@ export default function DairyDashboard() {
               <Button
                 variant="outlined"
                 onClick={toggleTheme}
-                startIcon={isDarkMode ? <CheckCircle /> : <Warning />} // Using existing icons for now, ideally Sun/Moon
+                startIcon={isDarkMode ? <CheckCircle /> : <Warning />}
                 sx={{ borderColor: isDarkMode ? '#fff' : 'inherit', color: isDarkMode ? '#fff' : 'inherit' }}
               >
                 {isDarkMode ? 'Light Mode' : 'Dark Mode'}

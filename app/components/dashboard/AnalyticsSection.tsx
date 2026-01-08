@@ -156,7 +156,7 @@ export default function AnalyticsSection() {
 
       {/* Analytics Cards Grid */}
       <div className={styles.analyticsGrid}>
-        <AnalyticsCard
+        {/*         <AnalyticsCard
           icon="🌾"
           title="Feed Consumed"
           subtitle="Total consumption"
@@ -165,7 +165,7 @@ export default function AnalyticsSection() {
           iconBg="rgba(16, 185, 129, 0.15)"
           iconColor="#10b981"
           onClick={() => router.push('/analytics/feed')}
-        />
+        /> */}
 
         <AnalyticsCard
           icon="🥛"

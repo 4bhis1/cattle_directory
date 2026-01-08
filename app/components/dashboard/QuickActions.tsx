@@ -5,14 +5,14 @@ import styles from "@/app/styles/dashboard.module.css";
 
 
 export const quickActionsData = [
-  {
-    id: 'feed/add',
-    icon: '🌾',
-    title: 'Add Feed Entry',
-    description: 'Record daily feed consumption for your cattle',
-    color: '#10b981',
-    bgColor: 'rgba(16, 185, 129, 0.15)'
-  },
+  // {
+  //   id: 'feed/add',
+  //   icon: '🌾',
+  //   title: 'Add Feed Entry',
+  //   description: 'Record daily feed consumption for your cattle',
+  //   color: '#10b981',
+  //   bgColor: 'rgba(16, 185, 129, 0.15)'
+  // },
   {
     id: 'milk',
     icon: '🥛',
@@ -30,29 +30,29 @@ export const quickActionsData = [
     bgColor: 'rgba(139, 92, 246, 0.15)'
   },
   {
-    id: 'sales/add',
+    id: 'sales/record',
     icon: '💵',
     title: 'Record Sale',
     description: 'Track milk sales to customers',
     color: '#06b6d4',
     bgColor: 'rgba(6, 182, 212, 0.15)'
   },
-  {
-    id: 'expense',
-    icon: '💰',
-    title: 'Add Expense',
-    description: 'Track farm expenses and costs',
-    color: '#f59e0b',
-    bgColor: 'rgba(245, 158, 11, 0.15)'
-  },
-  {
-    id: 'waste',
-    icon: '♻️',
-    title: 'Waste Management',
-    description: 'Track and manage waste for sale',
-    color: '#ef4444',
-    bgColor: 'rgba(239, 68, 68, 0.15)'
-  }
+  // {
+  //   id: 'expense',
+  //   icon: '💰',
+  //   title: 'Add Expense',
+  //   description: 'Track farm expenses and costs',
+  //   color: '#f59e0b',
+  //   bgColor: 'rgba(245, 158, 11, 0.15)'
+  // },
+  // {
+  //   id: 'waste',
+  //   icon: '♻️',
+  //   title: 'Waste Management',
+  //   description: 'Track and manage waste for sale',
+  //   color: '#ef4444',
+  //   bgColor: 'rgba(239, 68, 68, 0.15)'
+  // }
 ];
 
 interface QuickActionsProps {
