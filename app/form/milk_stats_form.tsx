@@ -3,81 +3,43 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   TextField,
-  Button,
   Alert,
   Snackbar,
   CircularProgress,
   InputAdornment,
-  Box,
-  Fade,
-  Zoom,
-  Typography,
-  Paper,
-  Divider,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  LinearProgress,
   Breadcrumbs,
   Link,
   IconButton,
+  LinearProgress,
 } from '@mui/material';
 import {
   CalendarMonth,
   LocalDrink,
-  AttachMoney,
   Pets,
-  CheckCircle,
   ArrowBack,
   NavigateNext,
-  Save,
 } from '@mui/icons-material';
-import StickyFooter from '../components/ui/StickyFooter';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 
-interface Cattle {
-  _id: string;
-  cattleId: string;
-  name: string;
-  status?: { current: string };
-  images?: string[];
-}
+import StickyFooter, { SummaryData } from '../components/ui/StickyFooter';
+import { Form } from '../components/ui/Form';
+import { useMilkProduction, MilkEntry } from '../hooks/useMilkProduction';
+import { useSaveMilkRecords } from '../hooks/useSaveMilkRecords';
 
-interface MilkData {
-  _id: string;
-  cattleId: string;
-  name: string;
-  morningMilk: number;
-  morningFat: number;
-  eveningMilk: number;
-  eveningFat: number;
-  image?: string;
-  status?: string;
-}
-
-type SnackbarSeverity = 'success' | 'error' | 'warning' | 'info';
-
-interface MilkStatsFormProps {
-  initialDate?: string;
-}
-
-// Define stable InputProps objects outside the component to prevent re-creation on every render
+// Define stable InputProps
 const literInputProps = {
   endAdornment: <InputAdornment position="end">L</InputAdornment>,
 };
 
-const currencyInputProps = {
-  startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-};
 
-export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
-  const searchParams = useSearchParams();
+
+
+
+export default function MilkStatsForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Get today's date in YYYY-MM-DD format
+  // Date Logic
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -87,109 +49,42 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
   };
 
   const urlDate = searchParams.get('date');
-  const [date, setDate] = useState(urlDate || initialDate || getTodayDate());
-  const [cattle, setCattle] = useState<Cattle[]>([]);
-  const [milkData, setMilkData] = useState<MilkData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchingCattle, setFetchingCattle] = useState(true);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: SnackbarSeverity;
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
-
-  const targetCattleId = searchParams.get('cattleId');
+  const [date, setDate] = useState(urlDate || getTodayDate());
   const isReadOnly = searchParams.get('readonly') === 'true';
 
-  // Fetch cattle on component mount
-  useEffect(() => {
-    fetchCattle();
-  }, []);
+  // Custom Hooks
+  const { data: milkData, loading, refetch } = useMilkProduction(date);
+  const { saveRecords, saving } = useSaveMilkRecords();
 
-  const fetchCattle = async () => {
-    try {
-      setFetchingCattle(true);
-      const response = await fetch('/api/cattle');
-      const data = await response.json();
-
-      if (data.success) {
-        let cattleList = data.data;
-        if (targetCattleId) {
-          cattleList = cattleList.filter((c: Cattle) => c._id === targetCattleId);
-        } else {
-          // Filter: only Active and Pregnant
-          const allowed = ['active', 'pregnant'];
-          cattleList = cattleList.filter((c: Cattle) => {
-            const s = (typeof c.status === 'object' ? c.status.current : c.status)?.toLowerCase() || '';
-            return allowed.includes(s);
-          });
-          // Sort: Active first, then Pregnant
-          cattleList.sort((a: Cattle, b: Cattle) => {
-            const sA = (typeof a.status === 'object' ? a.status.current : a.status)?.toLowerCase();
-            const sB = (typeof b.status === 'object' ? b.status.current : b.status)?.toLowerCase();
-            if (sA === 'active' && sB !== 'active') return -1;
-            if (sA !== 'active' && sB === 'active') return 1;
-            return 0;
-          });
-        }
-
-        setCattle(cattleList);
-        // Milk data initialization is now handled by the useEffect dependent on [cattle, date]
-      }
-    } catch (error) {
-      console.error('Error fetching cattle:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to fetch cattle data',
-        severity: 'error',
-      });
-    } finally {
-      setFetchingCattle(false);
+  // Form Setup
+  const methods = useForm<{ records: MilkEntry[] }>({
+    defaultValues: {
+      records: []
     }
-  };
+  });
 
-  const fetchMilkData = async () => {
-    if (cattle.length === 0) return;
+  const { control, register, reset } = methods;
 
-    try {
-      setFetchingCattle(true);
-      const res = await fetch(`/api/milk?date=${date}`);
-      const data = await res.json();
-      const milkRecords = data.success ? data.data : [];
+  const { fields, replace } = useFieldArray({
+    control,
+    name: "records",
+    keyName: "key" // unique key for each field
+  });
 
-      const newMilkData = cattle.map((c) => {
-        const morningRecord = milkRecords.find((r: any) => r.cattleId === c._id && r.milkingSession === 'morning');
-        const eveningRecord = milkRecords.find((r: any) => r.cattleId === c._id && r.milkingSession === 'evening');
+  // Watch fields for totals calculation
+  const records = useWatch({
+    control,
+    name: "records"
+  });
 
-        return {
-          _id: c._id,
-          cattleId: c.cattleId,
-          name: c.name,
-          morningMilk: morningRecord ? morningRecord.quantity : 0,
-          morningFat: morningRecord ? (morningRecord.quality?.fat || 4.5) : 4.5,
-          eveningMilk: eveningRecord ? eveningRecord.quantity : 0,
-          eveningFat: eveningRecord ? (eveningRecord.quality?.fat || 4.5) : 4.5,
-          image: (c.images && c.images.length > 0) ? c.images[c.images.length - 1] : undefined,
-          status: typeof c.status === 'object' ? c.status.current : c.status
-        };
-      });
-      setMilkData(newMilkData);
-    } catch (error) {
-      console.error('Error fetching milk data:', error);
-    } finally {
-      setFetchingCattle(false);
-    }
-  };
-
-  // Fetch milk data when cattle or date changes
+  // Sync data to form
   useEffect(() => {
-    fetchMilkData();
-  }, [cattle, date]);
+    if (milkData) {
+      replace(milkData);
+    }
+  }, [milkData, replace]);
 
+  // Handle Date Change
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = e.target.value;
     setDate(newDate);
@@ -202,353 +97,307 @@ export default function MilkStatsForm({ initialDate }: MilkStatsFormProps) {
     router.replace(`?${params.toString()}`);
   };
 
-  const handleInputChange = (
-    cattleId: string,
-    field: keyof MilkData,
-    value: string
-  ) => {
-    const numValue = parseFloat(value) || 0;
-    setMilkData((prev) =>
-      prev.map((cow) =>
-        cow.cattleId === cattleId ? { ...cow, [field]: numValue } : cow
-      )
-    );
-  };
+  // Calculations
+  const totalMorningMilk = records?.reduce((sum, r) => sum + (Number(r.morningMilk) || 0), 0) || 0;
+  const totalEveningMilk = records?.reduce((sum, r) => sum + (Number(r.eveningMilk) || 0), 0) || 0;
+  const totalMilkProduced = totalMorningMilk + totalEveningMilk;
 
-  const totalMilkProduced = milkData.reduce(
-    (sum, cow) => sum + cow.morningMilk + cow.eveningMilk,
-    0
-  );
-  const totalCost = 0; // Usage removed or calc differently if needed
+  const cowsWithMilk = records?.filter(c => (Number(c.morningMilk) > 0 || Number(c.eveningMilk) > 0)).length || 0;
+  const progress = fields.length > 0 ? (cowsWithMilk / fields.length) * 100 : 0;
 
-  const totalMorningMilk = milkData.reduce((sum, cow) => sum + cow.morningMilk, 0);
-  const totalEveningMilk = milkData.reduce((sum, cow) => sum + cow.eveningMilk, 0);
+  // Snackbar State
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-  // Calculate progress
-  const cowsWithMilk = milkData.filter(c => c.morningMilk > 0 || c.eveningMilk > 0).length;
-  const progress = cattle.length > 0 ? (cowsWithMilk / cattle.length) * 100 : 0;
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-
+  const onSubmit = async (data: { records: MilkEntry[] }) => {
     if (!date) {
-      setSnackbar({
-        open: true,
-        message: 'Please select a date',
-        severity: 'error',
-      });
+      setSnackbar({ open: true, message: 'Please select a date', severity: 'error' });
       return;
     }
 
-    setLoading(true);
+    const success = await saveRecords(data.records, date);
 
-    try {
-      // Save each cattle's milk record
-      const promises = [];
-
-      for (const cow of milkData) {
-        // Morning Record
-        if (cow.morningMilk > 0) {
-          promises.push(fetch('/api/milk', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              cattleId: cow._id,
-              milkingSession: 'morning',
-              date: date,
-              quantity: cow.morningMilk,
-              quality: {
-                fat: cow.morningFat,
-                snf: 8.5,
-                temperature: 35
-              },
-              soldTo: 'dairy',
-              pricePerLiter: 0,
-              totalAmount: 0,
-              paymentStatus: 'pending',
-              notes: `Session: Morning, Qty: ${cow.morningMilk}L, Fat: ${cow.morningFat}%`,
-              recordedBy: 'Admin'
-            })
-          }).then(res => res.json()));
-        }
-
-        // Evening Record
-        if (cow.eveningMilk > 0) {
-          promises.push(fetch('/api/milk', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              cattleId: cow._id,
-              milkingSession: 'evening',
-              date: date,
-              quantity: cow.eveningMilk,
-              quality: {
-                fat: cow.eveningFat,
-                snf: 8.5,
-                temperature: 35
-              },
-              soldTo: 'dairy',
-              pricePerLiter: 0,
-              totalAmount: 0,
-              paymentStatus: 'pending',
-              notes: `Session: Evening, Qty: ${cow.eveningMilk}L, Fat: ${cow.eveningFat}%`,
-              recordedBy: 'Admin'
-            })
-          }).then(res => res.json()));
-        }
-      }
-
-      await Promise.all(promises);
-
-      setSnackbar({
-        open: true,
-        message: '🥛 Milk production records saved successfully!',
-        severity: 'success',
-      });
-
-      // Reset form after successful submission
-      // Refresh data
-      fetchMilkData();
-    } catch (error) {
-      console.error('Error saving milk records:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to save records. Please try again.',
-        severity: 'error',
-      });
-    } finally {
-      setLoading(false);
+    if (success) {
+      setSnackbar({ open: true, message: '🥛 Milk production records saved successfully!', severity: 'success' });
+      refetch(); // Refresh data
+    } else {
+      setSnackbar({ open: true, message: 'Failed to save records. Please try again.', severity: 'error' });
     }
   };
 
   return (
-    <Box className="min-h-screen bg-gray-50 pb-32">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-0 transition-colors duration-300 flex flex-col relative">
       {/* Progress Bar */}
-      <LinearProgress
-        variant="determinate"
-        value={progress}
-        sx={{
-          height: 6,
-          backgroundColor: '#e2e8f0',
-          '& .MuiLinearProgress-bar': {
-            background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)'
-          }
-        }}
-      />
-
-      <Box className="max-w-7xl mx-auto px-4 py-6">
+      <div className='sticky top-0 z-50 w-full'>
+        <LinearProgress
+          variant="determinate"
+          className="sticky top-0 z-50 w-full"
+          value={progress}
+          sx={{
+            height: 6,
+            backgroundColor: '#e2e8f0',
+            '& .MuiLinearProgress-bar': {
+              background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)'
+            }
+          }}
+        />
+      </div>
+      <div className="w-full px-4 md:px-8 py-6 flex-grow">
         {/* Breadcrumbs & Header */}
-        <Box className="mb-8">
+        <div className="mb-8">
           <Breadcrumbs separator={<NavigateNext fontSize="small" />} aria-label="breadcrumb" className="mb-4">
-            <Link color="inherit" href="/home" onClick={(e) => { e.preventDefault(); router.push('/home'); }} className="no-underline hover:text-blue-600 cursor-pointer">
+            <Link color="inherit" href="/home" onClick={(e) => { e.preventDefault(); router.push('/home'); }} className="no-underline hover:text-blue-600 cursor-pointer text-slate-500 dark:text-slate-400 dark:hover:text-blue-400 transition-colors">
               Dashboard
             </Link>
-            <Typography color="text.primary">Milk Production</Typography>
+            <span className="text-slate-800 dark:text-slate-200 font-medium">Milk Production</span>
           </Breadcrumbs>
 
-          <Box className="flex items-center justify-between">
-            <Box className="flex items-center">
-              <IconButton onClick={() => router.back()} className="mr-4 bg-white shadow-sm hover:bg-gray-50">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center">
+              <IconButton onClick={() => router.back()} className="mr-4 bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">
                 <ArrowBack />
               </IconButton>
-              <Box>
-                <Typography variant="h4" className="font-bold text-gray-800">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
                   Milk Production Record
-                </Typography>
-                <Typography variant="body1" className="text-gray-500">
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400">
                   Record daily milk production for your cattle
-                </Typography>
-              </Box>
-            </Box>
+                </p>
+              </div>
+            </div>
 
-            <Paper className="px-4 py-2 bg-blue-50 border border-blue-100 rounded-xl flex items-center">
-              <CalendarMonth className="text-blue-600 mr-2" />
+            <div className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center shadow-sm">
+              <CalendarMonth className="text-blue-600 dark:text-blue-400 mr-2" />
               <TextField
                 type="date"
                 value={date}
+                size="small"
                 onChange={handleDateChange}
                 variant="standard"
-                InputProps={{ disableUnderline: true }}
+                InputProps={{
+                  disableUnderline: true,
+                  className: "text-slate-800 dark:text-white font-semibold"
+                }}
                 disabled={isReadOnly}
-                sx={{ '& input': { fontSize: '1.1rem', fontWeight: 600, color: '#1e40af' } }}
+                sx={{
+                  '& input': {
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    color: 'inherit',
+                    cursor: 'pointer'
+                  }
+                }}
               />
-            </Paper>
-          </Box>
-        </Box>
+            </div>
+          </div>
+        </div>
 
-        <Fade in={true} timeout={800}>
-          <Box>
-            {/* Milk Production Table Section */}
-            <Zoom in={true} style={{ transitionDelay: '150ms' }}>
-              <Paper elevation={0} className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-                <TableContainer>
-                  <Table>
-                    <TableHead className="bg-gray-50">
-                      <TableRow>
-                        <TableCell rowSpan={2} className="font-bold text-gray-600 py-4">
-                          <Box className="flex items-center">
-                            <Pets sx={{ mr: 1, color: '#3b82f6' }} />
-                            Cow Name
-                          </Box>
-                        </TableCell>
-                        <TableCell colSpan={2} align="center" className="font-bold text-gray-600 py-2 border-l border-gray-200">
-                          <Box className="flex items-center justify-center text-blue-600">
-                            <LocalDrink sx={{ mr: 1 }} fontSize="small" />
-                            Morning
-                          </Box>
-                        </TableCell>
-                        <TableCell colSpan={2} align="center" className="font-bold text-gray-600 py-2 border-l border-gray-200">
-                          <Box className="flex items-center justify-center text-purple-600">
-                            <LocalDrink sx={{ mr: 1 }} fontSize="small" />
-                            Evening
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell align="center" className="text-sm text-gray-500 border-l border-gray-200">Qty (L)</TableCell>
-                        <TableCell align="center" className="text-sm text-gray-500">Fat (%)</TableCell>
-                        <TableCell align="center" className="text-sm text-gray-500 border-l border-gray-200">Qty (L)</TableCell>
-                        <TableCell align="center" className="text-sm text-gray-500">Fat (%)</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {fetchingCattle ? (
-                        <TableRow key="loading">
-                          <TableCell colSpan={4} align="center" className="py-8">
-                            <CircularProgress size={24} />
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        milkData.map((cow) => (
-                          <TableRow
-                            key={cow.cattleId}
-                            hover
-                            className="transition-colors"
-                          >
-                            <TableCell>
-                              <Box className="flex items-center">
-                                <Box className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-3 overflow-hidden border border-gray-200">
-                                  {cow.image ? (
-                                    <img src={cow.image} alt={cow.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  ) : (
-                                    <Pets fontSize="small" className="text-gray-400" />
-                                  )}
-                                </Box>
-                                <Box>
-                                  <Typography variant="body1" className="font-semibold text-gray-800">
-                                    {cow.name}
-                                  </Typography>
-                                  {cow.status && (
-                                    <Chip
-                                      label={cow.status}
-                                      size="small"
-                                      color={cow.status === 'active' ? 'success' : cow.status === 'pregnant' ? 'warning' : 'default'}
-                                      variant="outlined"
-                                      sx={{ height: 20, fontSize: '0.65rem', mt: 0.5 }}
-                                    />
-                                  )}
-                                </Box>
-                              </Box>
-                            </TableCell>
-                            <TableCell className="border-l border-gray-200">
-                              <TextField
-                                type="number"
-                                value={cow.morningMilk}
-                                disabled={isReadOnly}
-                                onChange={(e) => handleInputChange(cow.cattleId, 'morningMilk', e.target.value)}
-                                inputProps={{ min: 0, step: 0.1 }}
-                                size="small"
-                                fullWidth
-                                InputProps={{ ...literInputProps, disableUnderline: true }}
-                                variant="outlined"
-                                sx={{ maxWidth: 100 }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <TextField
-                                type="number"
-                                value={cow.morningFat}
-                                disabled={isReadOnly}
-                                onChange={(e) => handleInputChange(cow.cattleId, 'morningFat', e.target.value)}
-                                inputProps={{ min: 0, step: 0.1 }}
-                                size="small"
-                                fullWidth
-                                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
-                                sx={{ maxWidth: 90 }}
-                              />
-                            </TableCell>
-                            <TableCell className="border-l border-gray-200">
-                              <TextField
-                                type="number"
-                                value={cow.eveningMilk}
-                                disabled={isReadOnly}
-                                onChange={(e) => handleInputChange(cow.cattleId, 'eveningMilk', e.target.value)}
-                                inputProps={{ min: 0, step: 0.1 }}
-                                size="small"
-                                fullWidth
-                                InputProps={{ ...literInputProps, disableUnderline: true }}
-                                variant="outlined"
-                                sx={{ maxWidth: 100 }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <TextField
-                                type="number"
-                                value={cow.eveningFat}
-                                disabled={isReadOnly}
-                                onChange={(e) => handleInputChange(cow.cattleId, 'eveningFat', e.target.value)}
-                                inputProps={{ min: 0, step: 0.1 }}
-                                size="small"
-                                fullWidth
-                                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
-                                sx={{ maxWidth: 90 }}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            </Zoom>
-          </Box>
-        </Fade>
-      </Box>
+        <Form methods={methods} onSubmit={onSubmit}>
+          <div className="animate-fade-in-up">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+                      <th rowSpan={2} className="py-4 px-6 font-semibold text-slate-700 dark:text-slate-300 min-w-[200px]">
+                        <div className="flex items-center gap-2">
+                          <Pets className="text-blue-500" fontSize="small" />
+                          <span>Cow Name</span>
+                        </div>
+                      </th>
+                      <th colSpan={2} className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10">
+                        <div className="flex items-center justify-center gap-1">
+                          <LocalDrink fontSize="small" />
+                          Morning
+                        </div>
+                      </th>
+                      <th colSpan={2} className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-semibold text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-900/10">
+                        <div className="flex items-center justify-center gap-1">
+                          <LocalDrink fontSize="small" />
+                          Evening
+                        </div>
+                      </th>
+                    </tr>
+                    <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <th className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-medium">Qty (L)</th>
+                      <th className="py-2 px-4 text-center font-medium">Fat (%)</th>
+                      <th className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-medium">Qty (L)</th>
+                      <th className="py-2 px-4 text-center font-medium">Fat (%)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center">
+                          <CircularProgress size={32} className="text-blue-600" />
+                          <p className="mt-2 text-slate-500 text-sm">Loading records...</p>
+                        </td>
+                      </tr>
+                    ) : fields.map((field, index) => (
+                      <tr
+                        key={field.key}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                      >
+                        <td className="py-3 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
+                              {field.image ? (
+                                <img src={field.image} alt={field.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <Pets fontSize="small" className="text-slate-400" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-slate-800 dark:text-white">
+                                {field.name}
+                              </div>
+                              {field.status && (
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium mt-0.5 border
+                                  ${field.status === 'active'
+                                    ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+                                    : field.status === 'pregnant'
+                                      ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800'
+                                      : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                                  {field.status}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {/* Hidden Inputs for ID and Name */}
+                          <input type="hidden" {...register(`records.${index}._id`)} />
+                          <input type="hidden" {...register(`records.${index}.cattleId`)} />
+                          <input type="hidden" {...register(`records.${index}.name`)} />
+                        </td>
 
-      {/* Fixed Bottom Bar */}
+                        {/* Morning Milk */}
+                        <td className="py-2 px-4 border-l border-slate-200 dark:border-slate-800">
+                          <TextField
+                            type="number"
+                            disabled={isReadOnly}
+                            placeholder="0.0"
+                            {...register(`records.${index}.morningMilk`, { valueAsNumber: true })}
+                            inputProps={{ min: 0, step: 0.1, className: 'text-center font-bold' }}
+                            size="small"
+                            fullWidth
+                            InputProps={{
+                              disableUnderline: true,
+                              className: "bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-white dark:group-hover:bg-slate-900 transition-colors"
+                            }}
+                            variant="standard"
+                            sx={{
+                              '& .MuiInputBase-root': { padding: '4px 8px' },
+                              '& input': { textAlign: 'center', color: '#3b82f6', fontWeight: 600 }
+                            }}
+                          />
+                        </td>
+                        <td className="py-2 px-4">
+                          <TextField
+                            type="number"
+                            disabled={isReadOnly}
+                            placeholder={field.morningFat?.toString() || ""}
+                            {...register(`records.${index}.morningFat`, { valueAsNumber: true })}
+                            inputProps={{ min: 0, step: 0.1 }}
+                            size="small"
+                            fullWidth
+                            InputProps={{
+                              disableUnderline: true,
+                              endAdornment: <span className="text-xs text-slate-400 ml-1">%</span>,
+                              className: "rounded-lg"
+                            }}
+                            variant="standard"
+                            sx={{
+                              '& .MuiInputBase-root': { padding: '4px 8px' },
+                              '& input': { textAlign: 'center', color: '#64748b' }
+                            }}
+                          />
+                        </td>
+
+                        {/* Evening Milk */}
+                        <td className="py-2 px-4 border-l border-slate-200 dark:border-slate-800">
+                          <TextField
+                            type="number"
+                            disabled={isReadOnly}
+                            placeholder="0.0"
+                            {...register(`records.${index}.eveningMilk`, { valueAsNumber: true })}
+                            inputProps={{ min: 0, step: 0.1 }}
+                            size="small"
+                            fullWidth
+                            InputProps={{
+                              disableUnderline: true,
+                              className: "bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-white dark:group-hover:bg-slate-900 transition-colors"
+                            }}
+                            variant="standard"
+                            sx={{
+                              '& .MuiInputBase-root': { padding: '4px 8px' },
+                              '& input': { textAlign: 'center', color: '#8b5cf6', fontWeight: 600 }
+                            }}
+                          />
+                        </td>
+                        <td className="py-2 px-4">
+                          <TextField
+                            type="number"
+                            disabled={isReadOnly}
+                            placeholder={field.eveningFat?.toString() || "4.5"}
+                            {...register(`records.${index}.eveningFat`, { valueAsNumber: true })}
+                            inputProps={{ min: 0, step: 0.1 }}
+                            size="small"
+                            fullWidth
+                            InputProps={{
+                              disableUnderline: true,
+                              endAdornment: <span className="text-xs text-slate-400 ml-1">%</span>,
+                              className: "rounded-lg"
+                            }}
+                            variant="standard"
+                            sx={{
+                              '& .MuiInputBase-root': { padding: '4px 8px' },
+                              '& input': { textAlign: 'center', color: '#64748b' }
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </Form>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          sx={{ bottom: { xs: 100, sm: 100 } }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </div>
+
       <StickyFooter
-        stats={[
-          { label: 'Morning', value: totalMorningMilk.toFixed(1), unit: 'L', valueColor: 'text-blue-600' },
-          { label: 'Evening', value: totalEveningMilk.toFixed(1), unit: 'L', valueColor: 'text-purple-600' },
-          { label: 'Total', value: totalMilkProduced.toFixed(1), unit: 'L', valueColor: 'text-gray-800' }
-          // Removed Income stat as rate is gone
-        ]}
+        summary={<SummaryData stats={[
+          { label: 'Morning', value: totalMorningMilk.toFixed(1), unit: 'L', valueColor: 'text-blue-600 dark:text-blue-400' },
+          { label: 'Evening', value: totalEveningMilk.toFixed(1), unit: 'L', valueColor: 'text-purple-600 dark:text-purple-400' },
+          { label: 'Total', value: totalMilkProduced.toFixed(1), unit: 'L', valueColor: 'text-slate-800 dark:text-white' }
+        ]} />}
+
+
         submitButton={{
-          text: 'Save Production',
-          onClick: () => handleSubmit(),
-          loading: loading,
-          disabled: loading || isReadOnly
+          text: 'Save',
+          onClick: () => methods.handleSubmit(onSubmit)(),
+          loading: saving,
+          disabled: saving || isReadOnly
         }}
       />
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ bottom: { xs: 100, sm: 100 } }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+    </div>
   );
 }

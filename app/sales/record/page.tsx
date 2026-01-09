@@ -8,17 +8,6 @@ import {
     Snackbar,
     CircularProgress,
     InputAdornment,
-    Box,
-    Fade,
-    Zoom,
-    Typography,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     LinearProgress,
     Breadcrumbs,
     Link,
@@ -27,16 +16,13 @@ import {
 } from '@mui/material';
 import {
     CalendarMonth,
-    LocalDrink,
-    AttachMoney,
-    Person,
     ArrowBack,
     NavigateNext,
     Add,
     CheckCircle,
     Warning
 } from '@mui/icons-material';
-import StickyFooter from '../../components/ui/StickyFooter';
+import StickyFooter, { SummaryData } from '../../components/ui/StickyFooter';
 import AddCustomerModal from '../../components/forms/AddCustomerModal';
 
 interface Customer {
@@ -111,11 +97,6 @@ export default function SalesRecordPage() {
     const [productionData, setProductionData] = useState<{ total: number } | null>(null);
     const [wasteQty, setWasteQty] = useState(0);
 
-    useEffect(() => {
-        fetchCustomers();
-        fetchProductionStats();
-    }, [date]);
-
     const fetchProductionStats = async () => {
         try {
             // Assuming /api/milk supports ?date=YYYY-MM-DD
@@ -133,40 +114,63 @@ export default function SalesRecordPage() {
         }
     };
 
-    const fetchCustomers = async () => {
-        try {
-            setFetchingCustomers(true);
-            const response = await fetch('/api/customers');
-            const data = await response.json();
+    const loadData = async () => {
+        setFetchingCustomers(true);
+        fetchProductionStats();
 
-            if (data.success) {
-                setCustomers(data.data);
-                // Initialize sales data
-                setSalesData(
-                    data.data.map((c: Customer) => ({
+        try {
+            const [custRes, salesRes] = await Promise.all([
+                fetch('/api/customers'),
+                fetch(`/api/sales?date=${date}`)
+            ]);
+
+            const custData = await custRes.json();
+            const salesDataResp = await salesRes.json();
+
+            if (custData.success) {
+                setCustomers(custData.data);
+
+                const existingSales = salesDataResp.success && Array.isArray(salesDataResp.data) ? salesDataResp.data : [];
+
+                // Filter sales for this customer and ensure date matches (safety check)
+                const combined = custData.data.map((c: Customer) => {
+                    const customerSales = existingSales.filter((s: any) => {
+                        const saleDate = new Date(s.date).toISOString().split('T')[0];
+                        return s.customerId === c._id && saleDate === date;
+                    });
+
+                    const morning = customerSales.find((s: any) => s.notes && s.notes.includes('Morning'));
+                    const evening = customerSales.find((s: any) => s.notes && s.notes.includes('Evening'));
+
+                    return {
                         _id: c._id,
                         customerId: c._id,
                         name: c.name,
-                        morningQty: 0,
-                        morningFat: 4.5,
-                        morningRate: 45,
-                        eveningQty: 0,
-                        eveningFat: 4.5,
-                        eveningRate: 45
-                    }))
-                );
+                        morningQty: morning?.quantityInLiters || 0,
+                        morningFat: morning?.fat || 4.5,
+                        morningRate: morning?.pricePerLiter || 45,
+                        eveningQty: evening?.quantityInLiters || 0,
+                        eveningFat: evening?.fat || 4.5,
+                        eveningRate: evening?.pricePerLiter || 45
+                    };
+                });
+                setSalesData(combined);
             }
         } catch (error) {
-            console.error('Error fetching customers:', error);
+            console.error('Error loading data:', error);
             setSnackbar({
                 open: true,
-                message: 'Failed to fetch customers',
+                message: 'Failed to load data',
                 severity: 'error',
             });
         } finally {
             setFetchingCustomers(false);
         }
     };
+
+    useEffect(() => {
+        loadData();
+    }, [date]);
 
     const handleCustomerAdded = (newCustomer: any) => {
         setCustomers(prev => [...prev, newCustomer]);
@@ -289,7 +293,7 @@ export default function SalesRecordPage() {
 
             // Reset quantities but keep customers/rates
             setTimeout(() => {
-                fetchCustomers();
+                loadData();
                 setWasteQty(0);
             }, 1500);
 
@@ -306,348 +310,335 @@ export default function SalesRecordPage() {
     };
 
     return (
-        <Box className="min-h-screen bg-gray-50 pb-40">
-            <LinearProgress
-                variant="determinate"
-                value={progress}
-                sx={{
-                    height: 6,
-                    backgroundColor: '#e2e8f0',
-                    '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)' }
-                }}
-            />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-0 transition-colors duration-300 flex flex-col relative">
+            {/* Progress Bar */}
+            <div className='sticky top-0 z-50 w-full'>
+                <LinearProgress
+                    variant="determinate"
+                    value={progress}
+                    sx={{
+                        height: 6,
+                        backgroundColor: '#e2e8f0',
+                        '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)' }
+                    }}
+                />
+            </div>
 
-            <Box className="max-w-[95%] mx-auto px-4 py-6">
-                <Box className="mb-8">
+            <div className="w-full px-4 md:px-8 py-6 flex-grow">
+                {/* Header */}
+                <div className="mb-8">
                     <Breadcrumbs separator={<NavigateNext fontSize="small" />} aria-label="breadcrumb" className="mb-4">
-                        <Link color="inherit" href="/home" onClick={(e) => { e.preventDefault(); router.push('/home'); }} className="no-underline hover:text-blue-600 cursor-pointer">
+                        <Link color="inherit" href="/home" onClick={(e) => { e.preventDefault(); router.push('/home'); }} className="no-underline hover:text-blue-600 cursor-pointer text-slate-500 dark:text-slate-400 dark:hover:text-blue-400 transition-colors">
                             Dashboard
                         </Link>
-                        <Typography color="text.primary">Sales Record</Typography>
+                        <span className="text-slate-800 dark:text-slate-200 font-medium">Sales Record</span>
                     </Breadcrumbs>
 
-                    <Box className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <Box className="flex items-center w-full md:w-auto">
-                            <IconButton onClick={() => router.back()} className="mr-4 bg-white shadow-sm hover:bg-gray-50">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center w-full md:w-auto">
+                            <IconButton onClick={() => router.back()} className="mr-4 bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">
                                 <ArrowBack />
                             </IconButton>
-                            <Box>
-                                <Typography variant="h4" className="font-bold text-gray-800">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
                                     Daily Sales Record
-                                </Typography>
-                                <Typography variant="body1" className="text-gray-500">
+                                </h2>
+                                <p className="text-slate-500 dark:text-slate-400">
                                     Reconcile production with sales
-                                </Typography>
-                            </Box>
-                        </Box>
+                                </p>
+                            </div>
+                        </div>
 
-                        <Box className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end">
+                        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end">
                             {!isReadOnly && (
                                 <Button
                                     variant="contained"
                                     startIcon={<Add />}
                                     onClick={() => setIsCustomerModalOpen(true)}
-                                    sx={{ bgcolor: '#3b82f6' }}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition-all"
+                                    sx={{ textTransform: 'none', borderRadius: '12px' }}
                                 >
                                     Add Customer
                                 </Button>
                             )}
-                            <Paper className="px-4 py-2 bg-blue-50 border border-blue-100 rounded-xl flex items-center">
-                                <CalendarMonth className="text-blue-600 mr-2" />
+                            <div className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center shadow-sm">
+                                <CalendarMonth className="text-blue-600 dark:text-blue-400 mr-2" />
                                 <TextField
                                     type="date"
                                     value={date}
                                     onChange={(e) => handleDateChange(e.target.value)}
                                     disabled={isReadOnly}
                                     variant="standard"
-                                    InputProps={{ disableUnderline: true }}
-                                    sx={{ '& input': { fontSize: '1.1rem', fontWeight: 600, color: '#1e40af' } }}
+                                    InputProps={{ disableUnderline: true, className: "text-slate-800 dark:text-white font-semibold" }}
+                                    sx={{ '& input': { fontSize: '1rem', fontWeight: 600, color: 'inherit', cursor: 'pointer' } }}
                                 />
-                            </Paper>
-                        </Box>
-                    </Box>
-                </Box>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Balance / Reconciliation Card */}
-                <Fade in={true}>
-                    <Paper elevation={0} className="mb-6 p-4 border border-gray-200 rounded-xl bg-white flex flex-wrap gap-6 items-center justify-between">
-                        <Box>
-                            <Typography variant="caption" className="text-gray-500 font-semibold uppercase">Total Production</Typography>
-                            <Typography variant="h5" className="font-bold text-blue-600">{totalProduced.toFixed(1)} L</Typography>
-                        </Box>
-                        <Box className="hidden md:block text-gray-300 mx-2 text-2xl">-</Box>
-                        <Box>
-                            <Typography variant="caption" className="text-gray-500 font-semibold uppercase">Total Sales</Typography>
-                            <Typography variant="h5" className="font-bold text-green-600">{totalSaleQuantity.toFixed(1)} L</Typography>
-                        </Box>
-                        <Box className="hidden md:block text-gray-300 mx-2 text-2xl">-</Box>
-                        <Box className="flex flex-col">
-                            <Typography variant="caption" className="text-gray-500 font-semibold uppercase mb-1">Waste / Personal</Typography>
-                            <Box className="flex items-center gap-2">
-                                <TextField
+                <div className="animate-fade-in-up mb-6">
+                    <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-sm flex flex-wrap gap-6 items-center justify-between transition-colors">
+                        <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Total Production</span>
+                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalProduced.toFixed(1)} L</div>
+                        </div>
+                        <div className="hidden md:block text-slate-300 dark:text-slate-700 mx-2 text-2xl">-</div>
+                        <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Total Sales</span>
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{totalSaleQuantity.toFixed(1)} L</div>
+                        </div>
+                        <div className="hidden md:block text-slate-300 dark:text-slate-700 mx-2 text-2xl">-</div>
+                        <div className="flex flex-col">
+                            <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Waste / Personal</span>
+                            <div className="flex items-center gap-2">
+                                <input
                                     type="number"
-                                    size="small"
+                                    className="w-24 p-1 bg-slate-50 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white font-semibold text-lg focus:outline-none focus:border-blue-500 transition-colors rounded-t"
                                     value={wasteQty}
                                     onChange={(e) => setWasteQty(parseFloat(e.target.value) || 0)}
                                     disabled={isReadOnly}
-                                    className="w-24"
-                                    inputProps={{ min: 0, step: 0.1 }}
+                                    min="0" step="0.1"
                                     placeholder="0"
                                 />
-                                <Typography variant="body2" className="text-gray-500">L</Typography>
-                            </Box>
-                        </Box>
-                        <Box className="hidden md:block text-gray-300 mx-2 text-2xl">=</Box>
-                        <Box>
-                            <Typography variant="caption" className="text-gray-500 font-semibold uppercase">Balance</Typography>
-                            <Box className={`flex items-center gap-2 px-3 py-1 rounded-full ${isBalanced ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                <Typography variant="h6" className="font-bold">
+                                <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">L</span>
+                            </div>
+                        </div>
+                        <div className="hidden md:block text-slate-300 dark:text-slate-700 mx-2 text-2xl">=</div>
+                        <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Balance</span>
+                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${isBalanced ? 'bg-green-100/50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100/50 text-red-700 dark:bg-red-900/20 dark:text-red-400'}`}>
+                                <span className="text-xl font-bold">
                                     {balance > 0 ? '+' : ''}{balance.toFixed(1)} L
-                                </Typography>
+                                </span>
                                 {isBalanced ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Fade>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <Fade in={true} timeout={800}>
-                    <Box>
-                        <Zoom in={true} style={{ transitionDelay: '150ms' }}>
-                            <Box>
-                                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                                    <Paper elevation={0} className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm text-sm">
-                                        <TableContainer sx={{ maxHeight: '60vh' }}>
-                                            <Table stickyHeader size="small">
-                                                <TableHead>
-                                                    <TableRow>
-                                                        <TableCell rowSpan={2} className="font-bold bg-gray-50" width="15%">Customer</TableCell>
-                                                        <TableCell colSpan={4} align="center" className="font-bold bg-blue-50 text-blue-800 border-l border-r border-blue-100">
-                                                            Morning Session
-                                                        </TableCell>
-                                                        <TableCell colSpan={4} align="center" className="font-bold bg-purple-50 text-purple-800 border-l border-r border-purple-100">
-                                                            Evening Session
-                                                        </TableCell>
-                                                        <TableCell rowSpan={2} align="right" className="font-bold bg-gray-50" width="10%">Total (₹)</TableCell>
-                                                    </TableRow>
-                                                    <TableRow>
-                                                        {/* Morning Headers */}
-                                                        <TableCell align="center" className="bg-blue-50 text-xs text-gray-500">Qty (L)</TableCell>
-                                                        <TableCell align="center" className="bg-blue-50 text-xs text-gray-500">Fat (%)</TableCell>
-                                                        <TableCell align="center" className="bg-blue-50 text-xs text-gray-500">Rate (₹)</TableCell>
-                                                        <TableCell align="center" className="bg-blue-50 text-xs font-semibold text-blue-700">Amt</TableCell>
+                <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                    <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+                                        <th rowSpan={2} className="py-4 px-6 font-semibold text-slate-700 dark:text-slate-300 w-[20%]">Customer</th>
+                                        <th colSpan={4} className="py-2 px-4 text-center border-l border-r border-slate-200 dark:border-slate-800 font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/30 dark:bg-blue-900/10">
+                                            Morning Session
+                                        </th>
+                                        <th colSpan={4} className="py-2 px-4 text-center border-l border-r border-slate-200 dark:border-slate-800 font-semibold text-purple-600 dark:text-purple-400 bg-purple-50/30 dark:bg-purple-900/10">
+                                            Evening Session
+                                        </th>
+                                        <th rowSpan={2} className="py-4 px-6 font-semibold text-right text-slate-700 dark:text-slate-300 w-[10%]">Total (₹)</th>
+                                    </tr>
+                                    <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        {/* Morning Headers */}
+                                        <th className="py-2 px-2 text-center text-[10px] md:text-xs">Qty (L)</th>
+                                        <th className="py-2 px-2 text-center text-[10px] md:text-xs">Fat (%)</th>
+                                        <th className="py-2 px-2 text-center text-[10px] md:text-xs">Rate (₹)</th>
+                                        <th className="py-2 px-2 text-center text-[10px] md:text-xs text-blue-600 dark:text-blue-400">Amt</th>
 
-                                                        {/* Evening Headers */}
-                                                        <TableCell align="center" className="bg-purple-50 text-xs text-gray-500">Qty (L)</TableCell>
-                                                        <TableCell align="center" className="bg-purple-50 text-xs text-gray-500">Fat (%)</TableCell>
-                                                        <TableCell align="center" className="bg-purple-50 text-xs text-gray-500">Rate (₹)</TableCell>
-                                                        <TableCell align="center" className="bg-purple-50 text-xs font-semibold text-purple-700">Amt</TableCell>
-                                                    </TableRow>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {fetchingCustomers ? (
-                                                        <TableRow>
-                                                            <TableCell colSpan={10} align="center" className="py-8">
-                                                                <CircularProgress size={24} />
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ) : (
-                                                        salesData.map((item) => (
-                                                            <TableRow key={item._id} hover>
-                                                                <TableCell className="font-semibold">{item.name}</TableCell>
+                                        {/* Evening Headers */}
+                                        <th className="py-2 px-2 text-center text-[10px] md:text-xs">Qty (L)</th>
+                                        <th className="py-2 px-2 text-center text-[10px] md:text-xs">Fat (%)</th>
+                                        <th className="py-2 px-2 text-center text-[10px] md:text-xs">Rate (₹)</th>
+                                        <th className="py-2 px-2 text-center text-[10px] md:text-xs text-purple-600 dark:text-purple-400">Amt</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {fetchingCustomers ? (
+                                        <tr>
+                                            <td colSpan={10} className="py-12 text-center">
+                                                <CircularProgress size={32} className="text-blue-600" />
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        salesData.map((item) => (
+                                            <tr key={item._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                                                <td className="py-3 px-6 font-semibold text-slate-800 dark:text-white">{item.name}</td>
 
-                                                                {/* Morning Inputs */}
-                                                                <TableCell className="border-l border-blue-50">
-                                                                    <input
-                                                                        disabled={isReadOnly}
-                                                                        type="number"
-                                                                        min="0" step="0.1"
-                                                                        className="w-16 p-1 border rounded text-right focus:ring-2 focus:ring-blue-500 outline-none"
-                                                                        value={item.morningQty || ''}
-                                                                        onChange={(e) => handleInputChange(item.customerId, 'morningQty', e.target.value)}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0" step="0.1"
-                                                                        className="w-12 p-1 border rounded text-right text-gray-500 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none"
-                                                                        value={item.morningFat}
-                                                                        onChange={(e) => handleInputChange(item.customerId, 'morningFat', e.target.value)}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <input
-                                                                        disabled={isReadOnly}
-                                                                        type="number"
-                                                                        min="0"
-                                                                        className="w-14 p-1 border rounded text-right text-gray-500 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none"
-                                                                        value={item.morningRate}
-                                                                        onChange={(e) => handleInputChange(item.customerId, 'morningRate', e.target.value)}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell align="right" className="border-r border-blue-50 font-medium text-blue-700">
-                                                                    {(item.morningQty * item.morningRate).toFixed(0)}
-                                                                </TableCell>
+                                                {/* Morning Inputs */}
+                                                <td className="p-2 border-l border-slate-100 dark:border-slate-800">
+                                                    <input
+                                                        disabled={isReadOnly}
+                                                        type="number" min="0" step="0.1" placeholder="0"
+                                                        className="w-full text-center p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-blue-600 dark:text-blue-400 font-bold focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                                                        value={item.morningQty || ''}
+                                                        onChange={(e) => handleInputChange(item.customerId, 'morningQty', e.target.value)}
+                                                    />
+                                                </td>
+                                                <td className="p-2">
+                                                    <input
+                                                        type="number" min="0" step="0.1"
+                                                        className="w-full text-center p-1.5 bg-transparent text-slate-500 dark:text-slate-400 text-sm focus:text-slate-800 dark:focus:text-white outline-none"
+                                                        value={item.morningFat}
+                                                        onChange={(e) => handleInputChange(item.customerId, 'morningFat', e.target.value)}
+                                                    />
+                                                </td>
+                                                <td className="p-2">
+                                                    <input
+                                                        disabled={isReadOnly}
+                                                        type="number" min="0"
+                                                        className="w-full text-center p-1.5 bg-transparent text-slate-500 dark:text-slate-400 text-sm focus:text-slate-800 dark:focus:text-white outline-none"
+                                                        value={item.morningRate}
+                                                        onChange={(e) => handleInputChange(item.customerId, 'morningRate', e.target.value)}
+                                                    />
+                                                </td>
+                                                <td className="p-2 text-center font-medium text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
+                                                    {(item.morningQty * item.morningRate).toFixed(0)}
+                                                </td>
 
-                                                                {/* Evening Inputs */}
-                                                                <TableCell className="border-l border-purple-50">
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0" step="0.1"
-                                                                        className="w-16 p-1 border rounded text-right focus:ring-2 focus:ring-purple-500 outline-none"
-                                                                        value={item.eveningQty || ''}
-                                                                        onChange={(e) => handleInputChange(item.customerId, 'eveningQty', e.target.value)}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0" step="0.1"
-                                                                        className="w-12 p-1 border rounded text-right text-gray-500 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 outline-none"
-                                                                        value={item.eveningFat}
-                                                                        onChange={(e) => handleInputChange(item.customerId, 'eveningFat', e.target.value)}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0"
-                                                                        className="w-14 p-1 border rounded text-right text-gray-500 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-purple-500 outline-none"
-                                                                        value={item.eveningRate}
-                                                                        onChange={(e) => handleInputChange(item.customerId, 'eveningRate', e.target.value)}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell align="right" className="border-r border-purple-50 font-medium text-purple-700">
-                                                                    {(item.eveningQty * item.eveningRate).toFixed(0)}
-                                                                </TableCell>
+                                                {/* Evening Inputs */}
+                                                <td className="p-2 border-l border-slate-100 dark:border-slate-800">
+                                                    <input
+                                                        type="number" min="0" step="0.1" placeholder="0"
+                                                        className="w-full text-center p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-purple-600 dark:text-purple-400 font-bold focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
+                                                        value={item.eveningQty || ''}
+                                                        onChange={(e) => handleInputChange(item.customerId, 'eveningQty', e.target.value)}
+                                                    />
+                                                </td>
+                                                <td className="p-2">
+                                                    <input
+                                                        type="number" min="0" step="0.1"
+                                                        className="w-full text-center p-1.5 bg-transparent text-slate-500 dark:text-slate-400 text-sm focus:text-slate-800 dark:focus:text-white outline-none"
+                                                        value={item.eveningFat}
+                                                        onChange={(e) => handleInputChange(item.customerId, 'eveningFat', e.target.value)}
+                                                    />
+                                                </td>
+                                                <td className="p-2">
+                                                    <input
+                                                        type="number" min="0"
+                                                        className="w-full text-center p-1.5 bg-transparent text-slate-500 dark:text-slate-400 text-sm focus:text-slate-800 dark:focus:text-white outline-none"
+                                                        value={item.eveningRate}
+                                                        onChange={(e) => handleInputChange(item.customerId, 'eveningRate', e.target.value)}
+                                                    />
+                                                </td>
+                                                <td className="p-2 text-center font-medium text-slate-600 dark:text-slate-300">
+                                                    {(item.eveningQty * item.eveningRate).toFixed(0)}
+                                                </td>
 
-                                                                {/* Total */}
-                                                                <TableCell align="right" className="font-bold text-green-700 bg-green-50">
-                                                                    {(
-                                                                        (item.morningQty * item.morningRate) +
-                                                                        (item.eveningQty * item.eveningRate)
-                                                                    ).toFixed(0)}
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))
-                                                    )}
-                                                </TableBody>
-                                            </Table>
-                                        </TableContainer>
-                                    </Paper>
-                                </Box>
+                                                {/* Total */}
+                                                <td className="py-3 px-6 text-right font-bold text-green-600 dark:text-green-400">
+                                                    {(
+                                                        (item.morningQty * item.morningRate) +
+                                                        (item.eveningQty * item.eveningRate)
+                                                    ).toFixed(0)}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-                                {/* Mobile View: Cards */}
-                                <Box sx={{ display: { xs: 'block', md: 'none' }, pb: 2 }}>
-                                    {salesData.map((item) => (
-                                        <Paper key={item._id} elevation={0} className="mb-4 p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
-                                            <Box className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
-                                                <Typography variant="h6" className="font-bold text-gray-800 text-base">{item.name}</Typography>
-                                                <Chip
-                                                    label={`₹${((item.morningQty * item.morningRate) + (item.eveningQty * item.eveningRate)).toFixed(0)}`}
-                                                    color="success"
-                                                    size="small"
-                                                    className="font-bold bg-green-100 text-green-800 border-none"
-                                                />
-                                            </Box>
+                    {/* Mobile View: Cards */}
+                    <div className="block md:hidden pb-2 space-y-4">
+                        {salesData.map((item) => (
+                            <div key={item._id} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                                <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                                    <h3 className="font-bold text-slate-800 dark:text-white text-base">{item.name}</h3>
+                                    <Chip
+                                        label={`₹${((item.morningQty * item.morningRate) + (item.eveningQty * item.eveningRate)).toFixed(0)}`}
+                                        className="font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-none"
+                                        size="small"
+                                    />
+                                </div>
 
-                                            {/* Morning */}
-                                            <Box className="mb-3 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
-                                                <Box className="flex items-center mb-2">
-                                                    <Typography variant="caption" className="text-blue-800 font-bold uppercase tracking-wider flex items-center">
-                                                        ☀️ Morning
-                                                    </Typography>
-                                                </Box>
-                                                <Box className="grid grid-cols-3 gap-2">
-                                                    <Box>
-                                                        <Typography variant="caption" className="text-blue-500 text-[10px] font-semibold">QTY (L)</Typography>
-                                                        <input
-                                                            disabled={isReadOnly}
-                                                            type="number" step="0.1"
-                                                            className="w-full p-2 border border-blue-200 rounded-lg text-center text-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white font-bold text-blue-900"
-                                                            value={item.morningQty || ''}
-                                                            onChange={(e) => handleInputChange(item.customerId, 'morningQty', e.target.value)}
-                                                            placeholder="0"
-                                                        />
-                                                    </Box>
-                                                    <Box>
-                                                        <Typography variant="caption" className="text-blue-500 text-[10px] font-semibold">FAT (%)</Typography>
-                                                        <input
-                                                            type="number" step="0.1"
-                                                            className="w-full p-2 border border-blue-200 rounded-lg text-center text-gray-500 bg-white/50 focus:bg-white focus:ring-1 focus:ring-blue-300 outline-none"
-                                                            value={item.morningFat}
-                                                            onChange={(e) => handleInputChange(item.customerId, 'morningFat', e.target.value)}
-                                                        />
-                                                    </Box>
-                                                    <Box>
-                                                        <Typography variant="caption" className="text-blue-500 text-[10px] font-semibold">RATE</Typography>
-                                                        <input
-                                                            disabled={isReadOnly}
-                                                            type="number"
-                                                            className="w-full p-2 border border-blue-200 rounded-lg text-center text-gray-500 bg-white/50 focus:bg-white focus:ring-1 focus:ring-blue-300 outline-none"
-                                                            value={item.morningRate}
-                                                            onChange={(e) => handleInputChange(item.customerId, 'morningRate', e.target.value)}
-                                                        />
-                                                    </Box>
-                                                </Box>
-                                            </Box>
+                                {/* Morning */}
+                                <div className="mb-3 bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                                    <div className="flex items-center mb-2">
+                                        <span className="text-blue-800 dark:text-blue-300 text-xs font-bold uppercase tracking-wider flex items-center">
+                                            ☀️ Morning
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div>
+                                            <span className="text-blue-500 dark:text-blue-400 text-[10px] font-semibold block mb-1">QTY (L)</span>
+                                            <input
+                                                disabled={isReadOnly}
+                                                type="number" step="0.1" placeholder="0"
+                                                className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg text-center text-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-950 font-bold text-blue-900 dark:text-blue-100"
+                                                value={item.morningQty || ''}
+                                                onChange={(e) => handleInputChange(item.customerId, 'morningQty', e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <span className="text-blue-500 dark:text-blue-400 text-[10px] font-semibold block mb-1">FAT (%)</span>
+                                            <input
+                                                type="number" step="0.1"
+                                                className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg text-center text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-950/50 focus:bg-white dark:focus:bg-slate-950 focus:ring-1 focus:ring-blue-300 outline-none"
+                                                value={item.morningFat}
+                                                onChange={(e) => handleInputChange(item.customerId, 'morningFat', e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <span className="text-blue-500 dark:text-blue-400 text-[10px] font-semibold block mb-1">RATE</span>
+                                            <input
+                                                disabled={isReadOnly}
+                                                type="number"
+                                                className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg text-center text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-950/50 focus:bg-white dark:focus:bg-slate-950 focus:ring-1 focus:ring-blue-300 outline-none"
+                                                value={item.morningRate}
+                                                onChange={(e) => handleInputChange(item.customerId, 'morningRate', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
 
-                                            {/* Evening */}
-                                            <Box className="bg-purple-50/50 p-3 rounded-xl border border-purple-100">
-                                                <Box className="flex items-center mb-2">
-                                                    <Typography variant="caption" className="text-purple-800 font-bold uppercase tracking-wider flex items-center">
-                                                        🌙 Evening
-                                                    </Typography>
-                                                </Box>
-                                                <Box className="grid grid-cols-3 gap-2">
-                                                    <Box>
-                                                        <Typography variant="caption" className="text-purple-500 text-[10px] font-semibold">QTY (L)</Typography>
-                                                        <input
-                                                            disabled={isReadOnly}
-                                                            type="number" step="0.1"
-                                                            className="w-full p-2 border border-purple-200 rounded-lg text-center text-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white font-bold text-purple-900"
-                                                            value={item.eveningQty || ''}
-                                                            onChange={(e) => handleInputChange(item.customerId, 'eveningQty', e.target.value)}
-                                                            placeholder="0"
-                                                        />
-                                                    </Box>
-                                                    <Box>
-                                                        <Typography variant="caption" className="text-purple-500 text-[10px] font-semibold">FAT (%)</Typography>
-                                                        <input
-                                                            type="number" step="0.1"
-                                                            className="w-full p-2 border border-purple-200 rounded-lg text-center text-gray-500 bg-white/50 focus:bg-white focus:ring-1 focus:ring-purple-300 outline-none"
-                                                            value={item.eveningFat}
-                                                            onChange={(e) => handleInputChange(item.customerId, 'eveningFat', e.target.value)}
-                                                        />
-                                                    </Box>
-                                                    <Box>
-                                                        <Typography variant="caption" className="text-purple-500 text-[10px] font-semibold">RATE</Typography>
-                                                        <input
-                                                            disabled={isReadOnly}
-                                                            type="number"
-                                                            className="w-full p-2 border border-purple-200 rounded-lg text-center text-gray-500 bg-white/50 focus:bg-white focus:ring-1 focus:ring-purple-300 outline-none"
-                                                            value={item.eveningRate}
-                                                            onChange={(e) => handleInputChange(item.customerId, 'eveningRate', e.target.value)}
-                                                        />
-                                                    </Box>
-                                                </Box>
-                                            </Box>
-                                        </Paper>
-                                    ))}
-                                </Box>
-                            </Box>
-                        </Zoom>
-                    </Box>
-                </Fade>
+                                {/* Evening */}
+                                <div className="bg-purple-50/50 dark:bg-purple-900/10 p-3 rounded-xl border border-purple-100 dark:border-purple-800/30">
+                                    <div className="flex items-center mb-2">
+                                        <span className="text-purple-800 dark:text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center">
+                                            🌙 Evening
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div>
+                                            <span className="text-purple-500 dark:text-purple-400 text-[10px] font-semibold block mb-1">QTY (L)</span>
+                                            <input
+                                                disabled={isReadOnly}
+                                                type="number" step="0.1" placeholder="0"
+                                                className="w-full p-2 border border-purple-200 dark:border-purple-800/50 rounded-lg text-center text-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-950 font-bold text-purple-900 dark:text-purple-100"
+                                                value={item.eveningQty || ''}
+                                                onChange={(e) => handleInputChange(item.customerId, 'eveningQty', e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <span className="text-purple-500 dark:text-purple-400 text-[10px] font-semibold block mb-1">FAT (%)</span>
+                                            <input
+                                                type="number" step="0.1"
+                                                className="w-full p-2 border border-purple-200 dark:border-purple-800/50 rounded-lg text-center text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-950/50 focus:bg-white dark:focus:bg-slate-950 focus:ring-1 focus:ring-purple-300 outline-none"
+                                                value={item.eveningFat}
+                                                onChange={(e) => handleInputChange(item.customerId, 'eveningFat', e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <span className="text-purple-500 dark:text-purple-400 text-[10px] font-semibold block mb-1">RATE</span>
+                                            <input
+                                                disabled={isReadOnly}
+                                                type="number"
+                                                className="w-full p-2 border border-purple-200 dark:border-purple-800/50 rounded-lg text-center text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-950/50 focus:bg-white dark:focus:bg-slate-950 focus:ring-1 focus:ring-purple-300 outline-none"
+                                                value={item.eveningRate}
+                                                onChange={(e) => handleInputChange(item.customerId, 'eveningRate', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
-            </Box>
+            </div>
 
             <StickyFooter
-                stats={[
-                    { label: 'Sales Qty', value: totalSaleQuantity.toFixed(1), unit: 'L', valueColor: 'text-blue-600' },
-                    { label: 'Waste', value: wasteQty.toFixed(1), unit: 'L', valueColor: 'text-red-500' },
-                    { label: 'Total Value', value: `₹${totalAmount.toFixed(0)}`, valueColor: 'text-green-600' }
-                ]}
+                summary={<SummaryData stats={[
+                    { label: 'Sales Qty', value: totalSaleQuantity.toFixed(1), unit: 'L', valueColor: 'text-blue-600 dark:text-blue-400' },
+                    { label: 'Waste', value: wasteQty.toFixed(1), unit: 'L', valueColor: 'text-red-500 dark:text-red-400' },
+                    { label: 'Total Value', value: `₹${totalAmount.toFixed(0)}`, valueColor: 'text-green-600 dark:text-green-400' }
+                ]} />}
                 submitButton={{
                     text: 'Save Sales',
                     onClick: handleSubmit,
@@ -673,6 +664,6 @@ export default function SalesRecordPage() {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-        </Box>
+        </div>
     );
 }

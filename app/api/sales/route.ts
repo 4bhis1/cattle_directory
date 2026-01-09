@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { fetchFromBackend } from '@/lib/backend';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const backendRes = await fetchFromBackend('/finance/sales');
+        const { searchParams } = new URL(request.url);
+        const queryString = searchParams.toString();
+        const endpoint = queryString ? `/finance/sales?${queryString}` : '/finance/sales';
+
+        const backendRes = await fetchFromBackend(endpoint);
         return NextResponse.json({
             success: true,
             data: backendRes.data.data

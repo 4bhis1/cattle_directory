@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from "@/app/styles/dashboard.module.css";
+
 import AnalyticsCard from './AnalyticsCard';
 
 export default function AnalyticsSection() {
@@ -125,29 +125,38 @@ export default function AnalyticsSection() {
 
   return (
     <section>
-      <div className={styles.sectionHeader}>
-        <h3>
-          <span>📊</span>
+      <div className="flex items-center gap-2 mb-6">
+        <span className="text-2xl">📊</span>
+        <h3 className="text-xl font-bold text-slate-800 dark:text-white">
           Quick Analytics
         </h3>
       </div>
 
       {/* Time Period Tabs */}
-      <div className={styles.timePeriodTabs}>
+      <div className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
         <button
-          className={`${styles.tabBtn} ${activePeriod === 'yesterday' ? styles.active : ''}`}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activePeriod === 'yesterday'
+            ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
           onClick={() => setActivePeriod('yesterday')}
         >
           Yesterday
         </button>
         <button
-          className={`${styles.tabBtn} ${activePeriod === 'weekly' ? styles.active : ''}`}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activePeriod === 'weekly'
+            ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
           onClick={() => setActivePeriod('weekly')}
         >
           Weekly
         </button>
         <button
-          className={`${styles.tabBtn} ${activePeriod === 'monthly' ? styles.active : ''}`}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activePeriod === 'monthly'
+            ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
           onClick={() => setActivePeriod('monthly')}
         >
           Monthly
@@ -155,18 +164,7 @@ export default function AnalyticsSection() {
       </div>
 
       {/* Analytics Cards Grid */}
-      <div className={styles.analyticsGrid}>
-        {/*         <AnalyticsCard
-          icon="🌾"
-          title="Feed Consumed"
-          subtitle="Total consumption"
-          value={currentData.feed.total}
-          details={currentData.feed.details}
-          iconBg="rgba(16, 185, 129, 0.15)"
-          iconColor="#10b981"
-          onClick={() => router.push('/analytics/feed')}
-        /> */}
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <AnalyticsCard
           icon="🥛"
           title="Milk Produced"

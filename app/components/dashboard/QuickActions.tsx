@@ -1,7 +1,7 @@
 'use client'
 import React from 'react';
 // import styles from '@/styles/dashboard.module.css';
-import styles from "@/app/styles/dashboard.module.css";
+
 
 
 export const quickActionsData = [
@@ -61,22 +61,29 @@ interface QuickActionsProps {
 
 export default function QuickActions({ onNavigate }: QuickActionsProps) {
   return (
-    <section className={styles.quickActions}>
+    <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {quickActionsData.map((action: any) => (
         <div
           key={action.id}
-          className={styles.actionCard}
-          style={{ '--card-color': action.color } as React.CSSProperties}
+          className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-slate-200 dark:border-slate-700 group relative overflow-hidden"
           onClick={() => onNavigate(action.id.split('/')[0])}
         >
+          <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500`}
+            style={{ background: action.color }}
+          />
+
           <div
-            className={styles.actionIcon}
+            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-4 transition-transform group-hover:scale-110 duration-200"
             style={{ background: action.bgColor, color: action.color }}
           >
             {action.icon}
           </div>
-          <h3>{action.title}</h3>
-          <p>{action.description}</p>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            {action.title}
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            {action.description}
+          </p>
         </div>
       ))}
     </section>

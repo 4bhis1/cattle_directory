@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-    Box,
     Drawer,
     List,
     ListItem,
@@ -13,8 +12,6 @@ import {
     ListItemText,
     IconButton,
     Tooltip,
-    Divider,
-    Typography,
     useTheme,
     useMediaQuery
 } from '@mui/material';
@@ -25,33 +22,122 @@ import {
     Pets,
     LocalDrink,
     AttachMoney,
-    Restaurant,
-    ReceiptLong,
-    Delete,
     Settings,
-    Logout,
     ChevronRight,
-    MenuOpen
 } from '@mui/icons-material';
 
-const DRAWER_WIDTH = 250;
-const COLLAPSED_WIDTH = 70;
+const DRAWER_WIDTH = 260;
+const COLLAPSED_WIDTH = 72;
 
-const NAV_ITEMS = [
-    { label: 'Dashboard', path: '/home', icon: <Dashboard /> },
-    { label: 'Cattle', path: '/cattle/dashboard', icon: <Pets /> },
-    { label: 'Milk Production', path: '/milk', icon: <LocalDrink /> },
-    { label: 'Sales Records', path: '/sales/record', icon: <AttachMoney /> },
-    // { label: 'Feed Management', path: '/feed/add', icon: <Restaurant /> },
-    // { label: 'Expenses', path: '/expenses/add', icon: <ReceiptLong /> },
-    // { label: 'Waste', path: '/waste/add', icon: <Delete /> },
-];
+const Divider = ({ className }: { className?: string }) => <div className={`h-[1px] bg-slate-400 my-2 ${className || ''}`} />
+
+const DrawerItem = ({ Icon, name, path, href, collapsed, isMobile, pathname, setMobileOpen }: any) => {
+    const isActive = pathname === path || (path !== '/home' && pathname.startsWith(path));
+    return (
+        <Tooltip title={(collapsed && !isMobile) ? name : ''} placement="right" arrow>
+            <Link href={href || path} className="no-underline block" onClick={() => isMobile && setMobileOpen && setMobileOpen(false)}>
+                <div
+                    className={`flex items-center py-3 px-3 mx-2 my-1 rounded-xl transition-all duration-200 group relative overflow-hidden cursor-pointer
+                    ${isActive
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'}
+                    ${collapsed && !isMobile ? 'justify-center' : ''}`}
+                >
+                    <Icon
+                        className={`transition-colors duration-200 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'} ${collapsed && !isMobile ? '' : 'mr-4'}`}
+                        sx={{ fontSize: 24 }}
+                    />
+
+                    {(!collapsed || isMobile) && (
+                        <span className={`font-medium transition-colors duration-200 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                            {name}
+                        </span>
+                    )}
+                </div>
+            </Link>
+        </Tooltip>
+    );
+}
+
+const DrawerContent = ({ collapsed, isMobile, toggleSidebar, handleDrawerToggle, setMobileOpen }: { collapsed: boolean, isMobile: boolean, toggleSidebar: () => void, handleDrawerToggle: () => void, setMobileOpen: (open: boolean) => void }) => {
+
+    const pathname = usePathname();
+
+    const ToggleIcon = isMobile ? ChevronLeft : (collapsed ? ChevronRight : ChevronLeft)
+
+    // Dynamic Navigation Items
+    const getTodayDate = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const navItems = [
+        { label: 'Dashboard', path: '/home', icon: Dashboard },
+        { label: 'Cattle', path: '/cattle/dashboard', icon: Pets },
+        { label: 'Milk Production', path: '/milk', href: `/milk?date=${getTodayDate()}`, icon: LocalDrink },
+        { label: 'Sales Records', path: '/sales/record', href: `/sales/record?date=${getTodayDate()}`, icon: AttachMoney },
+    ];
+
+    return (
+        <div className="flex flex-col h-full bg-slate-900">
+            {/* Logo Section */}
+            <div className={`flex items-center m-2 my-4 ${collapsed && !isMobile ? 'justify-center' : 'justify-between'}`}>
+                {(!collapsed || isMobile) && (
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-900/50">
+                            D
+                        </div>
+                        <div className="text-xl font-bold tracking-tight text-slate-100">
+                            Dairy<span className="text-blue-500">Track</span>
+                        </div>
+                    </div>
+                )}
+                <div className="flex items-center justify-center p-2 rounded-full   cursor-pointer hover:bg-slate-800 transition-all duration-200">
+
+                    <ToggleIcon onClick={isMobile ? handleDrawerToggle : toggleSidebar}
+                        className="text-slate-200 hover:text-white "
+                        // className="text-white hover:text-white hover:bg-yellow-800 transition-all duration-200"
+                        fontSize="small" />
+                </div>
+
+            </div>
+
+            <Divider className="border-slate-800" />
+
+            {/* Navigation Items */}
+            <List className="flex-1 space-y-1 px-2">
+                {navItems.map((item) => (
+                    <DrawerItem
+                        key={item.path}
+                        Icon={item.icon}
+                        name={item.label}
+                        path={item.path}
+                        href={item.href}
+                        pathname={pathname}
+                        collapsed={collapsed}
+                        isMobile={isMobile}
+                        setMobileOpen={setMobileOpen}
+                    />
+                ))}
+            </List>
+
+            {/* Bottom Section (Settings) */}
+
+            <Divider />
+            <DrawerItem Icon={Settings} name="Settings" path="/settings" pathname={pathname} collapsed={collapsed} isMobile={isMobile} setMobileOpen={setMobileOpen} />
+        </div>
+    );
+};
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const pathname = usePathname();
 
     const handleDrawerToggle = () => {
@@ -62,142 +148,59 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         setCollapsed(!collapsed);
     };
 
-    const drawerContent = (
-        <>
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: (collapsed && !isMobile) ? 'center' : 'space-between',
-                    p: 2,
-                    height: 64,
-                }}
-            >
-                {(!collapsed || isMobile) && (
-                    <Typography variant="h6" fontWeight="bold" noWrap sx={{ color: '#60a5fa' }}>
-                        Dairy<span className="text-white">Track</span>
-                    </Typography>
-                )}
-                <IconButton onClick={isMobile ? handleDrawerToggle : toggleSidebar} sx={{ color: 'white' }}>
-                    {isMobile ? <ChevronLeft /> : (collapsed ? <ChevronRight /> : <ChevronLeft />)}
-                </IconButton>
-            </Box>
-
-            <Divider sx={{ borderColor: '#334155' }} />
-
-            <List sx={{ px: 1, py: 2 }}>
-                {NAV_ITEMS.map((item) => {
-                    const isActive = pathname === item.path || (item.path !== '/home' && pathname.startsWith(item.path));
-                    return (
-                        <ListItem key={item.path} disablePadding sx={{ display: 'block', mb: 0.5 }}>
-                            <Tooltip title={(collapsed && !isMobile) ? item.label : ''} placement="right" arrow>
-                                <Link href={item.path} style={{ textDecoration: 'none', color: 'inherit' }} onClick={() => isMobile && setMobileOpen(false)}>
-                                    <ListItemButton
-                                        sx={{
-                                            minHeight: 48,
-                                            justifyContent: (collapsed && !isMobile) ? 'center' : 'initial',
-                                            px: 2.5,
-                                            borderRadius: 2,
-                                            backgroundColor: isActive ? '#3b82f6' : 'transparent',
-                                            '&:hover': {
-                                                backgroundColor: isActive ? '#2563eb' : '#334155',
-                                            },
-                                        }}
-                                    >
-                                        <ListItemIcon
-                                            sx={{
-                                                minWidth: 0,
-                                                mr: (collapsed && !isMobile) ? 0 : 2,
-                                                justifyContent: 'center',
-                                                color: isActive ? 'white' : '#94a3b8',
-                                            }}
-                                        >
-                                            {item.icon}
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={item.label}
-                                            sx={{
-                                                opacity: (collapsed && !isMobile) ? 0 : 1,
-                                                display: (collapsed && !isMobile) ? 'none' : 'block',
-                                                '& .MuiTypography-root': { fontWeight: isActive ? 600 : 400, fontSize: '0.95rem' }
-                                            }}
-                                        />
-                                    </ListItemButton>
-                                </Link>
-                            </Tooltip>
-                        </ListItem>
-                    );
-                })}
-            </List>
-
-            <Box sx={{ marginTop: 'auto', p: 1 }}>
-                <Divider sx={{ borderColor: '#334155', mb: 1 }} />
-                <ListItem disablePadding sx={{ display: 'block' }}>
-                    <Tooltip title={(collapsed && !isMobile) ? "Settings" : ''} placement="right">
-                        <ListItemButton
-                            sx={{
-                                minHeight: 48,
-                                justifyContent: (collapsed && !isMobile) ? 'center' : 'initial',
-                                px: 2.5,
-                                borderRadius: 2,
-                                '&:hover': { backgroundColor: '#334155' }
-                            }}
-                        >
-                            <ListItemIcon sx={{ minWidth: 0, mr: (collapsed && !isMobile) ? 0 : 2, justifyContent: 'center', color: '#94a3b8' }}>
-                                <Settings />
-                            </ListItemIcon>
-                            <ListItemText primary="Settings" sx={{ opacity: (collapsed && !isMobile) ? 0 : 1, display: (collapsed && !isMobile) ? 'none' : 'block' }} />
-                        </ListItemButton>
-                    </Tooltip>
-                </ListItem>
-            </Box>
-        </>
-    );
-
     return (
-        <Box sx={{ display: 'flex' }}>
+        <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
             <Drawer
                 variant={isMobile ? "temporary" : "permanent"}
                 open={isMobile ? mobileOpen : true}
                 onClose={handleDrawerToggle}
+                PaperProps={{
+                    className: "bg-slate-900 border-r border-slate-800 overflow-hidden",
+                    sx: {
+                        backgroundColor: '#0f172a', // Enforce dark background on Paper
+                        color: '#cbd5e1',
+                        width: isMobile ? DRAWER_WIDTH : (collapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH),
+                        transition: 'width 0.3s ease',
+                    }
+                }}
                 sx={{
                     width: isMobile ? 'auto' : (collapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH),
                     flexShrink: 0,
+                    transition: 'width 0.3s ease',
                     '& .MuiDrawer-paper': {
-                        width: isMobile ? DRAWER_WIDTH : (collapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH),
-                        transition: 'width 0.3s ease',
-                        overflowX: 'hidden',
-                        backgroundColor: '#1e293b',
-                        color: '#f8fafc',
-                        borderRight: '1px solid #334155',
-                    },
+                        border: 'none', // Remove default MUI border
+                    }
                 }}
             >
-                {drawerContent}
+                <DrawerContent collapsed={collapsed} isMobile={isMobile} toggleSidebar={toggleSidebar} handleDrawerToggle={handleDrawerToggle} pathname={pathname} setMobileOpen={setMobileOpen} />
             </Drawer>
 
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
+            <main
+                className={`flex-grow h-screen overflow-hidden flex flex-col transition-all duration-300 ease-in-out`}
+                style={{
                     width: isMobile ? '100%' : `calc(100% - ${collapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH}px)`,
-                    transition: 'width 0.3s ease, margin-left 0.3s ease',
-                    minHeight: '100vh',
-                    bgcolor: '#f1f5f9'
                 }}
             >
                 {isMobile && (
-                    <Box sx={{ p: 2, background: 'white', display: 'flex', alignItems: 'center', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 10 }}>
-                        <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: 2 }}>
-                            <MenuIcon />
-                        </IconButton>
-                        <Typography variant="h6" fontWeight="bold" color="text.primary">
-                            DairyTrack
-                        </Typography>
-                    </Box>
+                    <div className="h-16 px-4 bg-white dark:bg-slate-900 flex items-center border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 shrink-0">
+
+                        <MenuIcon onClick={handleDrawerToggle} className="mr-4 text-slate-200 dark:text-slate-300 cursor-pointer" />
+
+                        <div className="flex items-center gap-2">
+                            <div className="h-7 w-7 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                                D
+                            </div>
+                            <div className="text-lg font-bold text-slate-800 dark:text-white">
+                                DairyTrack
+                            </div>
+                        </div>
+                    </div>
                 )}
-                {children}
-            </Box>
-        </Box>
+
+                <div className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-950 scroll-smooth">
+                    {children}
+                </div>
+            </main>
+        </div>
     );
 }
