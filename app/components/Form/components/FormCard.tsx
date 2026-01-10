@@ -6,3 +6,14 @@ export const FormCard = ({children}: {children: React.ReactNode}) => {
         </div>
     );
 };
+
+export const FormCardHeader = ({Icon, title, containerStyle, titleStyle}: {Icon: React.ReactNode, title: string, containerStyle?: string, titleStyle?: string}) => {
+    return (
+       <div className={`flex items-center gap-4 mb-6 ${containerStyle}`}>
+       {Icon && Icon}
+        <h2 className={`text-lg font-bold text-slate-800 dark:text-white ${titleStyle}`}>
+          {title}
+        </h2>
+      </div>
+    );
+};

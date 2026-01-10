@@ -25,6 +25,7 @@ import {
     Settings,
     ChevronRight,
 } from '@mui/icons-material';
+import { ActionableIcon } from '../ui/ActionableIcon';
 
 const DRAWER_WIDTH = 260;
 const COLLAPSED_WIDTH = 72;
@@ -76,7 +77,7 @@ const DrawerContent = ({ collapsed, isMobile, toggleSidebar, handleDrawerToggle,
 
     const navItems = [
         { label: 'Dashboard', path: '/home', icon: Dashboard },
-        { label: 'Cattle', path: '/cattle/dashboard', icon: Pets },
+        { label: 'Cattle', path: '/cattle', icon: Pets },
         { label: 'Milk Production', path: '/milk', href: `/milk?date=${getTodayDate()}`, icon: LocalDrink },
         { label: 'Sales Records', path: '/sales/record', href: `/sales/record?date=${getTodayDate()}`, icon: AttachMoney },
     ];
@@ -95,14 +96,7 @@ const DrawerContent = ({ collapsed, isMobile, toggleSidebar, handleDrawerToggle,
                         </div>
                     </div>
                 )}
-                <div className="flex items-center justify-center p-2 rounded-full   cursor-pointer hover:bg-slate-800 transition-all duration-200">
-
-                    <ToggleIcon onClick={isMobile ? handleDrawerToggle : toggleSidebar}
-                        className="text-slate-200 hover:text-white "
-                        // className="text-white hover:text-white hover:bg-yellow-800 transition-all duration-200"
-                        fontSize="small" />
-                </div>
-
+                <ActionableIcon Icon={ToggleIcon} onClick={isMobile ? handleDrawerToggle : toggleSidebar} />
             </div>
 
             <Divider className="border-slate-800" />
@@ -135,7 +129,7 @@ const DrawerContent = ({ collapsed, isMobile, toggleSidebar, handleDrawerToggle,
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(true);
     const [mobileOpen, setMobileOpen] = useState(false);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const pathname = usePathname();
@@ -172,7 +166,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     }
                 }}
             >
-                <DrawerContent collapsed={collapsed} isMobile={isMobile} toggleSidebar={toggleSidebar} handleDrawerToggle={handleDrawerToggle} pathname={pathname} setMobileOpen={setMobileOpen} />
+                <DrawerContent collapsed={collapsed} isMobile={isMobile} toggleSidebar={toggleSidebar} handleDrawerToggle={handleDrawerToggle} setMobileOpen={setMobileOpen} />
             </Drawer>
 
             <main

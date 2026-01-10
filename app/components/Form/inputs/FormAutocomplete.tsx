@@ -12,7 +12,7 @@ interface Option {
 interface FormAutocompleteProps {
     name: string
     label: string
-    options: Option[]
+    options: Option[] | ((data: any) => Option[])
     placeholder?: string
     required?: boolean
     compute?: (value: any, setValue: any) => void
@@ -20,7 +20,7 @@ interface FormAutocompleteProps {
 }
 
 const FormAutocomplete = ({ name, label, options, placeholder, required, compute, className }: FormAutocompleteProps) => {
-    const { control, setValue: setFormValue } = useFormContext()
+    const { control, setValue: setFormValue ,watch } = useFormContext()
 
     return (
         <div className={`w-full ${className || ''}`}>
@@ -28,7 +28,16 @@ const FormAutocomplete = ({ name, label, options, placeholder, required, compute
                 control={control}
                 name={name}
                 rules={{ required: required ? `${label} is required` : false }}
-                render={({ field: { onChange, value, ref, ...fieldProps }, fieldState: { error } }) => (
+                render={({ field: { onChange, value, ref, ...fieldProps }, fieldState: { error,  }, formState: {  } }) => {
+                    
+                        // danger to use
+                        const data = watch()
+        
+                        if(typeof options === 'function'){
+                            options = options(data)
+                        }
+
+                    return (
                     <Autocomplete
                         {...fieldProps}
                         options={options}
@@ -59,7 +68,7 @@ const FormAutocomplete = ({ name, label, options, placeholder, required, compute
                         )}
                         isOptionEqualToValue={(option, value) => option.value === value.value}
                     />
-                )}
+                )}}
             />
         </div>
     )

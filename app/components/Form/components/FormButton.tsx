@@ -11,14 +11,14 @@ interface FormButtonProps {
 }
 
 const FormButton = ({ label = "Submit", className, fullWidth = true, Icon }: FormButtonProps) => {
-    const { formState: { isSubmitting } } = useFormContext()
-
+    const { formState: { isSubmitting, isDirty, isLoading, isValid, errors } } = useFormContext()
+    const disabled = isSubmitting || !isDirty || !isValid
     return (
         <Button
             type="submit"
             variant="contained"
             color="primary"
-            disabled={isSubmitting}
+            disabled={disabled}
             fullWidth={fullWidth}
             className={className}
             startIcon={isSubmitting && <CircularProgress size={20} color="inherit" />}
@@ -31,7 +31,7 @@ const FormButton = ({ label = "Submit", className, fullWidth = true, Icon }: For
             }}
         >
             {Icon && Icon}
-            {isSubmitting ? 'Processing...' : label}
+            {disabled ? 'Processing...' : label}
         </Button>
     )
 }
