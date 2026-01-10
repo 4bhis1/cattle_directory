@@ -33,3 +33,40 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Material UI Dark Mode Overrides */
+.dark .MuiInputBase-input {
+    color: white !important;
+}
+
+.dark .MuiInputLabel-root {
+    color: #94a3b8 !important; /* slate-400 */
+}
+.dark .MuiInputLabel-root.Mui-focused {
+    color: #3b82f6 !important; /* blue-500 */
+}
+
+.dark .MuiOutlinedInput-notchedOutline {
+    border-color: #334155 !important; /* slate-700 */
+}
+
+.dark .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: #94a3b8 !important; /* slate-400 */
+}
+
+.dark .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #3b82f6 !important; /* blue-500 */
+}
+
+.dark .MuiFormHelperText-root {
+    color: #94a3b8 !important; /* slate-400 */
+}
+
+.dark .MuiSelect-icon {
+    color: #94a3b8 !important;
+}
+
+.dark .MuiPaper-root.MuiMenu-paper {
+    background-color: #1e293b !important; /* slate-800 */
+    color: white !important;
+}

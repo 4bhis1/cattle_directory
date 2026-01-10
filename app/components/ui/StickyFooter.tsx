@@ -28,26 +28,31 @@ export const SummaryData = ({ stats }: { stats: StatItem[] }) => {
 };
 
 interface StickyFooterProps {
-    summary: React.ReactNode;
-    submitButton: {
+    children?: React.ReactNode;
+    summary?: React.ReactNode;
+    submitButton?: {
         text: string;
         onClick: () => void;
         loading?: boolean;
         disabled?: boolean;
     };
+    buttonStyle?: string;
+    buttonLabel?: string;
+    buttonIcon?: React.ReactNode;
+    parentStyle?: string;
 }
 
-export default function StickyFooter({ summary, submitButton }: StickyFooterProps) {
-    return (
-        <div className="sticky bottom-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md">
-            <div className=" flex-row mx-auto p-4 flex flex-col border-t border-slate-200 dark:border-slate-800 md:flex-row items-center justify-between gap-4">
-                {summary}
+export default function StickyFooter({ children, summary = <div />, submitButton, buttonStyle, buttonLabel, buttonIcon, parentStyle }: StickyFooterProps) {
+
+    if(!children){
+        children = <>
+        {summary}
                 <Button
                     variant="contained"
-                    onClick={submitButton.onClick}
-                    disabled={submitButton.disabled || submitButton.loading}
-                    startIcon={submitButton.loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
-                    className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-95"
+                    onClick={submitButton?.onClick}
+                    disabled={submitButton?.disabled || submitButton?.loading}
+                    startIcon={submitButton?.loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
+                    className={`w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-95 ${buttonStyle || ''}`}
                     sx={{
                         textTransform: 'none',
                         fontSize: '1rem',
@@ -60,6 +65,14 @@ export default function StickyFooter({ summary, submitButton }: StickyFooterProp
                 >
                     {submitButton.loading ? 'Saving...' : submitButton.text}
                 </Button>
+        </>
+    }
+
+
+    return (
+        <div className={`sticky bottom-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md`}>
+            <div className={` flex-row mx-auto p-4 flex flex-col border-t border-slate-200 dark:border-slate-800 md:flex-row items-center justify-between gap-4 ${parentStyle || ''}`}>
+                {children}
             </div>
         </div>
     );

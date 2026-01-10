@@ -6,14 +6,16 @@ interface UseFormSubmitOptions {
     endpoint?: string
     method?: 'POST' | 'PUT' | 'PATCH'
     onSuccess?: (data: any) => void
-    onError?: (error: any) => void
+    onError?: (error: any) => void,
+    beforeSubmit?: (data: any) => data
 }
 
 const useFormSubmit = <T = any>({
     endpoint,
     method = 'POST',
     onSuccess,
-    onError
+    onError,
+    beforeSubmit
 }: UseFormSubmitOptions) => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<Error | null>(null)
@@ -28,6 +30,9 @@ const useFormSubmit = <T = any>({
         }
         setIsSubmitting(true)
         setError(null)
+
+        formData = beforeSubmit ? beforeSubmit(formData) : formData
+
         try {
             let response: any;
             if (method === 'POST') {

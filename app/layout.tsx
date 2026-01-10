@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 };
 
 import AppLayout from "./components/layout/AppLayout";
+import { SnackbarProvider } from "./context/SnackbarContext";
+import { CommonProvider } from "./context/CommonProvider";
 
 export default function RootLayout({
   children,
@@ -29,9 +31,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppLayout>
-          {children}
-        </AppLayout>
+        <SnackbarProvider>
+          <CommonProvider>
+            <AppLayout>
+              {children}
+            </AppLayout>
+          </CommonProvider>
+        </SnackbarProvider>
       </body>
     </html>
   );

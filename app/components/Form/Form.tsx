@@ -15,6 +15,7 @@ import FormDate from "./inputs/FormDate";
 import FormNumber from "./inputs/FormNumber";
 import FormImage from "./inputs/FormImage";
 import FormAutocomplete from "./inputs/FormAutocomplete";
+import FormSmartAutocomplete from "./inputs/FormSmartAutocomplete";
 import useFormFetch from "./hooks/useFormFetch";
 import useFormSubmit from "./hooks/useFormSubmit";
 
@@ -27,22 +28,28 @@ type FormContextType = UseFormReturn<any> & {
 
 const FormContext = createContext<FormContextType | null>(null);
 
+interface FormProps {
+  children: React.ReactNode;
+  onSubmit?: SubmitHandler<any>;
+  endpoint?: string;
+  method?: "POST" | "PUT" | "PATCH";
+  beforeSubmit?: (data: any) => void;
+  onSuccess?: (data: any) => void;
+  onError?: (error: any) => void;
+  defaultValues?: any;
+}
+
 const Form = ({
   children,
   onSubmit: customSubmit,
   endpoint,
   method,
+  beforeSubmit,
   onSuccess,
-  onError,
-}: {
-  children: React.ReactNode;
-  onSubmit?: SubmitHandler<any>;
-  endpoint?: string;
-  method?: "POST" | "PUT" | "PATCH";
-  onSuccess?: (data: any) => void;
-  onError?: (error: any) => void;
-}) => {
-  const formProps = useForm();
+  onError,  
+  defaultValues,
+}: FormProps) => {
+  const formProps = useForm({defaultValues});
   const {
     submit,
     isSubmitting,
@@ -53,6 +60,7 @@ const Form = ({
     method,
     onSuccess,
     onError,
+    beforeSubmit
   });
   const onSubmit: SubmitHandler<any> =
     customSubmit || submit || ((data) => console.log("Submitted Data:", data));
@@ -92,6 +100,7 @@ export {
   FormNumber,
   FormImage,
   FormAutocomplete,
+  FormSmartAutocomplete,
 };
 
 export default Form;

@@ -4,47 +4,104 @@ export const CATTLE_TYPE_OPTIONS = [
 ];
 
 export const BUFFALO_BREEDS = [
-  // Indian
-  {label:"Murrah",value:"murrah"},
-  {label:"Jaffarabadi",value:"jaffarabadi"},
-  {label:"Surti",value:"surti"},
-  {label:"Mehsana",value:"mehsana"},
-  {label:"Bhadawari",value:"bhadawari"},
-  {label:"Nagpuri",value:"nagpuri"},
-  {label:"Pandharpuri",value:"pandharpuri"},
-  {label:"Toda",value:"toda"},
-  {label:"Nili-Ravi",value:"nili-ravi"},
-  // International / Regional
-  {label:"Mediterranean",value:"mediterranean"},
-  {label:"Carabao",value:"carabao"},
-  {label:"Egyptian Buffalo",value:"egyptian-buffalo"},
-  {label:"Bulgarian Murrah",value:"bulgarian-murrah"}
+  {
+    label: "Murrah",
+    value:"murrah",
+    expectedMilkProduction: 6,
+    fatPercentage: 7.3
+  },
+  {
+    label: "Jaffarabadi",
+    value:"jaffarabadi",
+    expectedMilkProduction: 7,
+    fatPercentage: 7.7
+  },
+  {
+    label: "Surti",
+    value:"surti",
+    expectedMilkProduction: 5.5,
+    fatPercentage: 7.0
+  },
+  {
+    label: "Mehsana",
+    value:"mehsana",
+    expectedMilkProduction: 6.5,
+    fatPercentage: 7.5
+  },
+  {
+    label: "Nili-Ravi",
+    value:"nili-ravi",
+    expectedMilkProduction: 6.5,
+    fatPercentage: 6.5
+  },
+  {
+    label: "Mediterranean Buffalo",
+    value:"mediterranean-buffalo",
+    expectedMilkProduction: 6,
+    fatPercentage: 7.9
+  }
 ];
+
+
 
 export const COW_BREEDS = [
-  // Indian (Bos indicus)
-  {label:"Gir",value:"gir"},
-  {label:"Sahiwal",value:"sahiwal"},
-  {label:"Red Sindhi",value:"red-sindhi"},
-  {label:"Tharparkar",value:"tharparkar"},
-  {label:"Rathi",value:"rathi"},
-  {label:"Kankrej",value:"kankrej"},
-  {label:"Hariana",value:"hariana"},
-  {label:"Ongole",value:"ongole"},
-  {label:"Deoni",value:"deoni"},
-  {label:"Vechur",value:"vechurch"},
-
-  // Exotic / International (Bos taurus)
-  {label:"Holstein Friesian",value:"holstein-friesian"},
-  {label:"Jersey",value:"jersey"},
-  {label:"Brown Swiss",value:"brown-swiss"},
-  {label:"Hereford",value:"hereford"},
-  {label:"Angus",value:"angus"},
-  {label:"Guernsey",value:"guernsey"},
-  {label:"Ayrshire",value:"ayrshire"},
-  {label:"Simmental",value:"simmental"},
-  {label:"Charolais",value:"charolais"}
+  {
+    label: "Gir",
+    value:"gir",
+    expectedMilkProduction: 7,
+    fatPercentage: 4.6
+  },
+  {
+    label: "Sahiwal",
+    value:"sahiwal",
+    expectedMilkProduction: 7.5,
+    fatPercentage: 4.5
+  },
+  {
+    label: "Red Sindhi",
+    value:"red-sindhi",
+    expectedMilkProduction: 6,
+    fatPercentage: 4.5
+  },
+  {
+    label: "Tharparkar",
+    value:"tharparkar",
+    expectedMilkProduction: 8,
+    fatPercentage: 4.2
+  },
+  {
+    label: "Holstein Friesian",
+    value:"holstein-friesian",
+    expectedMilkProduction: 25,
+    fatPercentage: 3.6
+  },
+  {
+    label: "Jersey",
+    value:"jersey",
+    expectedMilkProduction: 20,
+    fatPercentage: 5.0
+  },
+  {
+    label: "Brown Swiss",
+    value:"brown-swiss",
+    expectedMilkProduction: 30,
+    fatPercentage: 4.0
+  },
+  {
+    label: "Guernsey",
+    value:"guernsey",
+    expectedMilkProduction: 22,
+    fatPercentage: 4.5
+  },
+  {
+    label: "Ayrshire",
+    value:"ayrshire",
+    expectedMilkProduction: 18,
+    fatPercentage: 3.9
+  }
 ];
+
+
 
 export const GENDER_OPTIONS = [
     { label: "Male", value: "male" },

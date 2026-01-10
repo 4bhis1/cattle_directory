@@ -11,6 +11,10 @@ import {
     Breadcrumbs,
     Link,
     Tooltip,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Chip
 } from '@mui/material';
 import {
     Pets,
@@ -24,33 +28,16 @@ import {
     Edit,
     DeleteOutline,
     FrontLoader,
+    ExpandMore,
+    Folder
 } from '@mui/icons-material';
 import { TopHeader } from '@/app/components/ui/Header';
 import Loader from '@/app/components/ui/Loader';
 import { fetchFromBackend } from '@/lib/backend';
-import { useCattleFilter } from '@/app/components/cattle/hooks/useCattleFilter';
+import { useCattleFilter, CattleData } from '@/app/components/cattle/hooks/useCattleFilter';
 import FilterBar from '@/app/components/cattle/components/FilterBar';
 import { ActionableIcon } from '@/app/components/ui/ActionableIcon';
 import { useUser } from '@/app/context/CommonProvider';
-
-
-export interface Cattle {
-    _id: string;
-    cattleId: string;
-    name: string;
-    breed: string;
-    status: string | { current: string; history: any[] };
-    motherId?: string;
-    children?: Cattle[];
-    dateOfBirth?: string;
-    expectedMilkProduction?: number;
-    numberOfBirths?: number;
-    // Mock stats
-    lastMilk?: number;
-    lastFeed?: number;
-    lastWaste?: number;
-    images?: string[];
-}
 
 const calculateAge = (dobString?: string) => {
     if (!dobString) return 'N/A';
@@ -60,8 +47,9 @@ const calculateAge = (dobString?: string) => {
     return Math.abs(ageDate.getUTCFullYear() - 1970) + ' yrs';
 };
 
-const CattleCard = ({ cow, depth = 0, router }: any) => {
+const CattleCard = ({ cow, depth = 0, router }: { cow: CattleData, depth?: number, router: any }) => {
     const currentStatus = typeof cow.status === 'object' ? (cow.status as any).current : cow.status;
+    const hasChildren = cow.children && cow.children.length > 0;
 
     return (
         <React.Fragment key={cow._id}>
@@ -83,30 +71,32 @@ const CattleCard = ({ cow, depth = 0, router }: any) => {
                         </div>
 
                         <div>
-                            <div className="flex items-center gap-3 mb-1 justify-center">
+                            <div className="flex items-center gap-3 mb-1">
                                 <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
                                     {cow.name}
                                 </h3>
-                                <div className="flex gap-3">
+                                {(cow.lastMilk !== undefined && cow.lastMilk > 0) && (
                                     <div
                                         className="flex items-center gap-2 cursor-pointer bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/30 px-3 py-1.5 rounded-lg transition-colors group/stat"
                                         onClick={() => router.push(`/milk?cattleId=${cow._id}`)}
                                     >
                                         <LocalDrink sx={{ fontSize: 16 }} className="text-blue-500 group-hover/stat:scale-110 transition-transform" />
                                         <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
-                                            {cow.lastMilk}L Today
+                                            {cow.lastMilk}L
                                         </span>
                                     </div>
+                                )}
+                                {(cow.lastFeed !== undefined && cow.lastFeed > 0) && (
                                     <div
                                         className="flex items-center gap-2 cursor-pointer bg-emerald-50 dark:bg-emerald-900/10 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 px-3 py-1.5 rounded-lg transition-colors group/stat"
                                         onClick={() => router.push(`/feed/add?cattleId=${cow._id}`)}
                                     >
                                         <Restaurant sx={{ fontSize: 16 }} className="text-emerald-500 group-hover/stat:scale-110 transition-transform" />
                                         <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                                            {cow.lastFeed}kg Today
+                                            {cow.lastFeed}kg
                                         </span>
                                     </div>
-                                </div>
+                                )}
                             </div>
                             <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap">
                                 <span className="font-medium text-slate-700 dark:text-slate-300">ID: {cow.cattleId}</span>
@@ -114,10 +104,10 @@ const CattleCard = ({ cow, depth = 0, router }: any) => {
                                 <span>{cow.breed}</span>
                                 <span>•</span>
                                 <span>{calculateAge(cow.dateOfBirth)}</span>
+                                {hasChildren && (
+                                    <Chip label={`${cow.children?.length} children`} size="small" variant="outlined" className="ml-2 h-5 text-[10px]" />
+                                )}
                             </div>
-
-                            {/* Clickable Stats */}
-
                         </div>
                     </div>
 
@@ -129,13 +119,13 @@ const CattleCard = ({ cow, depth = 0, router }: any) => {
                     </div>
                 </div>
             </div>
-            {cow.children && cow.children.map((child: any) => CattleCard({ cow: child, depth: depth + 1, router }))}
+            {cow.children && cow.children.map((child: CattleData) => CattleCard({ cow: child, depth: depth + 1, router }))}
         </React.Fragment>
     );
 };
 
 const useFetchCattle = () => {
-    const [cattleList, setCattleList] = useState<Cattle[]>([]);
+    const [cattleList, setCattleList] = useState<CattleData[]>([]);
     const [loading, setLoading] = useState(true);
     const fetchCattle = async () => {
         try {
@@ -143,7 +133,7 @@ const useFetchCattle = () => {
             const data = await fetchFromBackend('/cattle');
 
             if (data.status === 'success') {
-                const allCattle: Cattle[] = data.data.data;
+                const allCattle: CattleData[] = Array.isArray(data.data) ? data.data : (data.data?.data || []);
                 setCattleList(allCattle);
             } else {
                 console.error('Failed to fetch cattle:', data.message || 'Unknown error');
@@ -189,19 +179,58 @@ const NoCattle = ({ isAdmin, router }: { isAdmin: boolean, router: any }) => {
 export default function CattleDashboard() {
     const router = useRouter();
     let { cattleList, loading } = useFetchCattle();
-    // loading = true
     const { isAdmin } = useUser();
 
     const {
-        searchQuery,
-        setSearchQuery,
-        statusFilter,
-        setStatusFilter,
-        breedFilter,
-        setBreedFilter,
-        filteredList,
+        // Filters
+        searchQuery, setSearchQuery,
+        statusFilter, setStatusFilter,
+        breedFilter, setBreedFilter,
+        minCapacity, setMinCapacity,
+        maxCapacity, setMaxCapacity,
+        dateFilterType, setDateFilterType,
+        startDate, setStartDate,
+        endDate, setEndDate,
+        hideNoProduction, setHideNoProduction,
+        
+        // Mode State
+        isHierarchy, setIsHierarchy,
+        groupBy, setGroupBy,
+
+        // Data
+        filters,
+        filteredFlatList,
+        hierarchyList,
+        groupedList,
         availableBreeds
     } = useCattleFilter(cattleList);
+
+    const handleExport = () => {
+        const dataToExport = filteredFlatList.map(c => ({
+            ID: c.cattleId,
+            Name: c.name,
+            Breed: c.breed,
+            Status: typeof c.status === 'object' ? (c.status as any).current : c.status,
+            DOB: c.dateOfBirth,
+            'Est. Milk': c.expectedMilkProduction || 0,
+            JoinDate: c.dateOfAcquisition,
+            MotherID: c.motherId || 'N/A'
+        }));
+        
+        if (dataToExport.length === 0) return;
+
+        const headers = Object.keys(dataToExport[0]).join(',');
+        const rows = dataToExport.map(row => Object.values(row).map(v => `"${v}"`).join(',')); // Quote values
+        const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join('\n');
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `cattle_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const actionButton = isAdmin && (
         <Button
@@ -221,23 +250,62 @@ export default function CattleDashboard() {
         </Button>
     )
 
-    const routes = <div>
-        <Breadcrumbs separator={<NavigateNext fontSize="small" />} aria-label="breadcrumb">
-            <Link color="inherit" href="/home" onClick={(e) => { e.preventDefault(); router.push('/home'); }} className="no-underline hover:text-blue-600 cursor-pointer text-slate-500 dark:text-slate-400 text-sm">
-                Dashboard
-            </Link>
-            <Typography color="text.primary" className="text-slate-800 dark:text-white font-medium text-sm">Cattle</Typography>
-        </Breadcrumbs>
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mt-1">
-            Cattle Management
-        </h1>
-    </div>
+
+
+    const renderContent = () => {
+        // 1. Grouped View
+        if (groupBy !== 'none' && groupedList) {
+            return Object.entries(groupedList).map(([groupName, cows]) => (
+                <Accordion key={groupName} defaultExpanded elevation={0} className="mb-4 border border-slate-200 dark:border-slate-800 before:hidden bg-transparent">
+                    <AccordionSummary expandIcon={<ExpandMore />} className="bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                             <Folder className="text-blue-500" />
+                             <Typography className="font-bold text-slate-700 dark:text-slate-200">
+                                {groupName} 
+                                <span className="ml-2 text-slate-400 text-sm font-normal">({cows.length})</span>
+                             </Typography>
+                        </div>
+                    </AccordionSummary>
+                    <AccordionDetails className="pt-4 px-0">
+                         {cows.map((cow) => <CattleCard key={cow._id} cow={cow} router={router} />)}
+                    </AccordionDetails>
+                </Accordion>
+            ));
+        }
+
+        // 2. Hierarchy View
+        if (isHierarchy) {
+             return hierarchyList.length > 0 ? (
+                hierarchyList.map((cow) => <CattleCard key={cow._id} cow={cow} depth={0} router={router} />)
+            ) : (
+                <div className="text-center py-12 text-slate-500">
+                    No cattle found in hierarchy view.
+                </div>
+            );
+        }
+
+        // 3. Flat List View
+        return filteredFlatList.length > 0 ? (
+            filteredFlatList.map((cow) => <CattleCard key={cow._id} cow={cow} depth={0} router={router} />)
+        ) : (
+             <div className="text-center py-12 text-slate-500">
+                No cattle found matching your filters.
+            </div>
+        );
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors duration-300">
-            <TopHeader actionButton={actionButton} routes={routes} />
+            <TopHeader 
+                actionButton={actionButton} 
+                title="Cattle Management"
+                breadcrumbs={[
+                    { label: "Dashboard", href: "/home" },
+                    { label: "Cattle", href: "#" }
+                ]}
+            />
             <div className="mx-auto px-4 md:px-8 py-8">
-                {loading ? (
+                 {loading ? (
                     <Loader text="Loading your cattles..." />
                 ) : cattleList.length === 0 ? (
                     <NoCattle isAdmin={isAdmin} router={router} />
@@ -251,15 +319,28 @@ export default function CattleDashboard() {
                             breedFilter={breedFilter}
                             setBreedFilter={setBreedFilter}
                             availableBreeds={availableBreeds}
+                            
+                            minCapacity={minCapacity}
+                            setMinCapacity={setMinCapacity}
+                            maxCapacity={maxCapacity}
+                            setMaxCapacity={setMaxCapacity}
+                            dateFilterType={dateFilterType}
+                            setDateFilterType={setDateFilterType}
+                            startDate={startDate}
+                            setStartDate={setStartDate}
+                            endDate={endDate}
+                            setEndDate={setEndDate}
+                            hideNoProduction={hideNoProduction}
+                            setHideNoProduction={setHideNoProduction}
+                            
+                            isHierarchy={isHierarchy}
+                            setIsHierarchy={setIsHierarchy}
+                            groupBy={groupBy}
+                            setGroupBy={setGroupBy}
+                            onExport={handleExport}
                         />
                         <div className="space-y-4">
-                            {filteredList.length > 0 ? (
-                                filteredList.map((cow: any) => CattleCard({ cow, depth: 0, router }))
-                            ) : (
-                                <div className="text-center py-12 text-slate-500">
-                                    No cattle found matching your filters.
-                                </div>
-                            )}
+                           {renderContent()}
                         </div>
                     </>
                 )}

@@ -4,6 +4,7 @@ import {
   FormDate,
   FormInput,
   FormNumber,
+  FormSmartAutocomplete,
 } from "../../Form/Form";
 import { FormCard, FormCardHeader } from "../../Form/components/FormCard";
 import {
@@ -49,11 +50,23 @@ const BasicInfoSection = () => {
           options={(data) =>
             data.cattleType === "cow" ? COW_BREEDS : BUFFALO_BREEDS
           }
+          compute={(val: string, setValue: any) => {
+            const breed = COW_BREEDS.find((breed) => breed.value === val);
+            if (breed) {
+              setValue("expectedMilkProduction", breed.expectedMilkProduction);
+              setValue("fatPercentage", breed.fatPercentage);
+            }
+          }}
         />
-        <FormAutocomplete
+        <FormSmartAutocomplete
           name="motherId"
-          label="Mother (if in farm)"
-          options={[]}
+          label="Select Mother (if in farm)"
+          endpoint="/cattle"
+          placeholder="Search cattle by name..."
+          getLabel={(option: any) => option.name}
+          getValue={(option: any) => option._id}
+          searchParam="search"
+          className="flex-grow"
         />
       </div>
 
@@ -79,7 +92,7 @@ const BasicInfoSection = () => {
       <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-4 block">
         Production Metrics
       </span>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <FormNumber name="expectedMilkProduction" label="Est. Daily Milk (L)" />
         <FormNumber name="fatPercentage" label="Fat %" />
         <FormNumber name="numberOfBirths" label="No. of Births" />
@@ -99,7 +112,7 @@ const BasicInfoSection = () => {
         <FormDate
           name="dateOfAcquisition"
           label="Date of Acquisition"
-          //  required
+          required
         />
         <FormNumber name="purchasePrice" label="Purchase Price" />
       </div>

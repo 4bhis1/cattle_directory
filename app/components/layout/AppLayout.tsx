@@ -83,7 +83,7 @@ const DrawerContent = ({ collapsed, isMobile, toggleSidebar, handleDrawerToggle,
     ];
 
     return (
-        <div className="flex flex-col h-full bg-slate-900">
+        <div className="flex flex-col h-full bg-slate-900 border-r border-width-8 border-slate-800">
             {/* Logo Section */}
             <div className={`flex items-center m-2 my-4 ${collapsed && !isMobile ? 'justify-center' : 'justify-between'}`}>
                 {(!collapsed || isMobile) && (
