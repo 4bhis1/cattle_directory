@@ -26,7 +26,7 @@ type FormContextType = UseFormReturn<any> & {
   data: any;
 };
 
-const FormContext = createContext<FormContextType | null>(null);
+export const FormContext = createContext<FormContextType | null>(null);
 
 interface FormProps {
   children: React.ReactNode;
@@ -37,7 +37,35 @@ interface FormProps {
   onSuccess?: (data: any) => void;
   onError?: (error: any) => void;
   defaultValues?: any;
+  fetchUrl?: string | null;
+  postFetch?: (data: any) => any;
+  fetchParams?: any;
 }
+
+const FormWrapper = ({
+  children,
+  fetchUrl,
+  postFetch,
+  fetchParams,
+  onSubmit
+}: {
+  children: React.ReactNode;
+  fetchUrl?: string | null;
+  postFetch?: (data: any) => any;
+  fetchParams?: any;
+  onSubmit?: React.FormEventHandler<HTMLFormElement>;
+}) => {
+  useFormFetch({
+    endpoint: fetchUrl,
+    params: fetchParams,
+    postFetch,
+  });
+  return (
+    <form onSubmit={onSubmit} className="w-full">
+      {children}
+    </form>
+  );
+};
 
 const Form = ({
   children,
@@ -46,10 +74,12 @@ const Form = ({
   method,
   beforeSubmit,
   onSuccess,
-  onError,  
+  onError,
   defaultValues,
+  ...props
 }: FormProps) => {
-  const formProps = useForm({defaultValues});
+  const formProps = useForm({ defaultValues });
+
   const {
     submit,
     isSubmitting,
@@ -60,7 +90,7 @@ const Form = ({
     method,
     onSuccess,
     onError,
-    beforeSubmit
+    beforeSubmit,
   });
   const onSubmit: SubmitHandler<any> =
     customSubmit || submit || ((data) => console.log("Submitted Data:", data));
@@ -75,9 +105,9 @@ const Form = ({
         data: submitResult,
       }}
     >
-      <form onSubmit={formProps.handleSubmit(onSubmit)} className="w-full">
+      <FormWrapper fetchUrl={endpoint} onSubmit={formProps.handleSubmit(onSubmit)} {...props}>
         {children}
-      </form>
+      </FormWrapper>
     </FormContext.Provider>
   );
 };

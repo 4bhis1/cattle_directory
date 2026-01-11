@@ -29,13 +29,16 @@ import {
     DeleteOutline,
     FrontLoader,
     ExpandMore,
-    Folder
+    Folder,
+    Download
 } from '@mui/icons-material';
 import { TopHeader } from '@/app/components/ui/Header';
 import Loader from '@/app/components/ui/Loader';
 import { fetchFromBackend } from '@/lib/backend';
 import { useCattleFilter, CattleData } from '@/app/components/cattle/hooks/useCattleFilter';
-import FilterBar from '@/app/components/cattle/components/FilterBar';
+import { TableToolbar } from '@/app/components/Table/TableToolbar';
+import { TablePagination } from '@/app/components/Table/TablePagination';
+import CattleFilterContent from '@/app/components/cattle/components/CattleFilterContent';
 import { ActionableIcon } from '@/app/components/ui/ActionableIcon';
 import { useUser } from '@/app/context/CommonProvider';
 
@@ -182,31 +185,34 @@ export default function CattleDashboard() {
     const { isAdmin } = useUser();
 
     const {
-        // Filters
-        searchQuery, setSearchQuery,
-        statusFilter, setStatusFilter,
-        breedFilter, setBreedFilter,
-        minCapacity, setMinCapacity,
-        maxCapacity, setMaxCapacity,
-        dateFilterType, setDateFilterType,
-        startDate, setStartDate,
-        endDate, setEndDate,
-        hideNoProduction, setHideNoProduction,
-        
-        // Mode State
-        isHierarchy, setIsHierarchy,
-        groupBy, setGroupBy,
-
-        // Data
-        filters,
-        filteredFlatList,
+        table,
+        availableBreeds,
         hierarchyList,
-        groupedList,
-        availableBreeds
+        isHierarchy,
+        setIsHierarchy
     } = useCattleFilter(cattleList);
+    
+    const { 
+        data: paginatedList, 
+        groupedData: groupedList, 
+        totalItems, 
+        totalPages, 
+        page, 
+        setPage, 
+        limit, 
+        setLimit, 
+        searchQuery, 
+        setSearchQuery, 
+        filters, 
+        setFilter, 
+        clearFilters,
+        groupBy, 
+        setGroupBy,
+    } = table;
 
     const handleExport = () => {
-        const dataToExport = filteredFlatList.map(c => ({
+        // Export logic using all filtered data (sortedData)
+        const dataToExport = (table.sortedData || paginatedList).map(c => ({
             ID: c.cattleId,
             Name: c.name,
             Breed: c.breed,
@@ -250,8 +256,6 @@ export default function CattleDashboard() {
         </Button>
     )
 
-
-
     const renderContent = () => {
         // 1. Grouped View
         if (groupBy !== 'none' && groupedList) {
@@ -275,7 +279,7 @@ export default function CattleDashboard() {
 
         // 2. Hierarchy View
         if (isHierarchy) {
-             return hierarchyList.length > 0 ? (
+             return hierarchyList && hierarchyList.length > 0 ? (
                 hierarchyList.map((cow) => <CattleCard key={cow._id} cow={cow} depth={0} router={router} />)
             ) : (
                 <div className="text-center py-12 text-slate-500">
@@ -285,8 +289,8 @@ export default function CattleDashboard() {
         }
 
         // 3. Flat List View
-        return filteredFlatList.length > 0 ? (
-            filteredFlatList.map((cow) => <CattleCard key={cow._id} cow={cow} depth={0} router={router} />)
+        return paginatedList.length > 0 ? (
+            paginatedList.map((cow) => <CattleCard key={cow._id} cow={cow} depth={0} router={router} />)
         ) : (
              <div className="text-center py-12 text-slate-500">
                 No cattle found matching your filters.
@@ -311,37 +315,53 @@ export default function CattleDashboard() {
                     <NoCattle isAdmin={isAdmin} router={router} />
                 ) : (
                     <>
-                        <FilterBar
+                        <TableToolbar
                             searchQuery={searchQuery}
-                            setSearchQuery={setSearchQuery}
-                            statusFilter={statusFilter}
-                            setStatusFilter={setStatusFilter}
-                            breedFilter={breedFilter}
-                            setBreedFilter={setBreedFilter}
-                            availableBreeds={availableBreeds}
-                            
-                            minCapacity={minCapacity}
-                            setMinCapacity={setMinCapacity}
-                            maxCapacity={maxCapacity}
-                            setMaxCapacity={setMaxCapacity}
-                            dateFilterType={dateFilterType}
-                            setDateFilterType={setDateFilterType}
-                            startDate={startDate}
-                            setStartDate={setStartDate}
-                            endDate={endDate}
-                            setEndDate={setEndDate}
-                            hideNoProduction={hideNoProduction}
-                            setHideNoProduction={setHideNoProduction}
-                            
-                            isHierarchy={isHierarchy}
-                            setIsHierarchy={setIsHierarchy}
+                            onSearchChange={setSearchQuery}
+                            onClearFilters={clearFilters}
                             groupBy={groupBy}
-                            setGroupBy={setGroupBy}
-                            onExport={handleExport}
-                        />
+                            onGroupByChange={setGroupBy}
+                            groupByOptions={[
+                                { label: 'Breed', value: 'breed' },
+                                { label: 'Status', value: 'status' },
+                                { label: 'Joining Year', value: 'joining_date' },
+                                { label: 'Vaccination Date', value: 'vaccination_date' },
+                            ]}
+                            isHierarchy={isHierarchy}
+                            onToggleHierarchy={setIsHierarchy}
+                            actions={
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<Download />}
+                                    onClick={handleExport}
+                                    size="medium"
+                                    sx={{ borderColor: 'rgba(0,0,0,0.12)', textTransform: 'none', px: 2 }}
+                                >
+                                    Export
+                                </Button>
+                            }
+                        >
+                            <CattleFilterContent 
+                                filters={filters}
+                                setFilter={setFilter}
+                                availableBreeds={availableBreeds}
+                            />
+                        </TableToolbar>
+
                         <div className="space-y-4">
                            {renderContent()}
                         </div>
+
+                        {!isHierarchy && groupBy === 'none' && (
+                            <TablePagination
+                                page={page}
+                                count={totalPages}
+                                limit={limit}
+                                onPageChange={setPage}
+                                onLimitChange={setLimit}
+                                totalItems={totalItems}
+                            />
+                        )}
                     </>
                 )}
             </div>

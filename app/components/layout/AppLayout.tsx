@@ -78,8 +78,8 @@ const DrawerContent = ({ collapsed, isMobile, toggleSidebar, handleDrawerToggle,
     const navItems = [
         { label: 'Dashboard', path: '/home', icon: Dashboard },
         { label: 'Cattle', path: '/cattle', icon: Pets },
-        { label: 'Milk Production', path: '/milk', href: `/milk?date=${getTodayDate()}`, icon: LocalDrink },
-        { label: 'Sales Records', path: '/sales/record', href: `/sales/record?date=${getTodayDate()}`, icon: AttachMoney },
+        { label: 'Milk Production', path: '/milk', href: `/milk`, icon: LocalDrink },
+        { label: 'Sales Records', path: '/sales/record', href: `/sales/record`, icon: AttachMoney },
     ];
 
     return (
@@ -131,8 +131,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [collapsed, setCollapsed] = useState(true);
     const [mobileOpen, setMobileOpen] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const pathname = usePathname();
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);

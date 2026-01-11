@@ -7,10 +7,10 @@ interface UseFormSubmitOptions {
     method?: 'POST' | 'PUT' | 'PATCH'
     onSuccess?: (data: any) => void
     onError?: (error: any) => void,
-    beforeSubmit?: (data: any) => data
+    beforeSubmit?: (data: any) => any
 }
 
-const useFormSubmit = <T = any>({
+const useFormSubmit =({
     endpoint,
     method = 'POST',
     onSuccess,
@@ -21,7 +21,7 @@ const useFormSubmit = <T = any>({
     const [error, setError] = useState<Error | null>(null)
     const [data, setData] = useState<any>(null)
 
-    const submit = async (formData: T) => {
+    const submit = async (formData: any) => {
         if (!endpoint) {
             const err = new Error("No endpoint provided for form submission")
             console.error(err)
