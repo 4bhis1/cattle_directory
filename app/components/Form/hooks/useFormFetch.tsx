@@ -49,9 +49,6 @@ const useFormFetch = ({
             try {
                 const response = await apiService.get(endpoint, params);
 
-                console.log(">>> params of useFormFetch ", isMounted)
-                console.log(">>> response of useFormFetch ", response)
-
                 if (isMounted) {
                     setData(response);
 
@@ -61,7 +58,6 @@ const useFormFetch = ({
                         formData = postFetch(formData);
                     }
                     
-                    console.log(">>> formData of useFormFetch ", formData)
                     // Only try to reset if we have a valid reset function
                     if (resetForm && reset) {
                         reset(formData);

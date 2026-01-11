@@ -47,13 +47,15 @@ const FormWrapper = ({
   fetchUrl,
   postFetch,
   fetchParams,
-  onSubmit
+  onSubmit,
+  ...props
 }: {
   children: React.ReactNode;
   fetchUrl?: string | null;
   postFetch?: (data: any) => any;
   fetchParams?: any;
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  [key: string]: any;
 }) => {
   useFormFetch({
     endpoint: fetchUrl,
@@ -61,7 +63,7 @@ const FormWrapper = ({
     postFetch,
   });
   return (
-    <form onSubmit={onSubmit} className="w-full">
+    <form onSubmit={onSubmit} className="w-full" {...props}>
       {children}
     </form>
   );
@@ -76,6 +78,7 @@ const Form = ({
   onSuccess,
   onError,
   defaultValues,
+  fetchUrl,
   ...props
 }: FormProps) => {
   const formProps = useForm({ defaultValues });
@@ -105,7 +108,7 @@ const Form = ({
         data: submitResult,
       }}
     >
-      <FormWrapper fetchUrl={endpoint} onSubmit={formProps.handleSubmit(onSubmit)} {...props}>
+      <FormWrapper fetchUrl={fetchUrl} onSubmit={formProps.handleSubmit(onSubmit)} {...props}>
         {children}
       </FormWrapper>
     </FormContext.Provider>

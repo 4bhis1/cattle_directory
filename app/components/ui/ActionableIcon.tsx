@@ -2,9 +2,9 @@ import { Tooltip } from "@mui/material";
 
 export const ActionableIcon = ({ Icon, onClick, tooltipText, iconStyle = "text-slate-200 hover:text-white ", }: any) => {
 
-    let iconRender = <Icon onClick={onClick}
+    let iconRender = Icon ? <Icon onClick={onClick}
         className={iconStyle}
-        fontSize="small" />
+        fontSize="small" /> : null;
 
     if (tooltipText) {
         iconRender = <Tooltip title={tooltipText}>{iconRender}</Tooltip>
