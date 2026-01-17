@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Person, Phone, Home, Email, AttachMoney } from "@mui/icons-material";
+import { Person, Phone, Home, Email, CurrencyRupee } from "@mui/icons-material";
 import Form, {
   FormInput,
   FormButton,
@@ -11,6 +11,7 @@ import Form, {
   FormNumber
 } from "@/app/components/Form/Form";
 import { useSnackbar } from "@/app/context/SnackbarContext";
+import { DEFAULT_ORGANISATION_ID } from "@/app/context/CommonProvider";
 
 const CustomerFormInner = ({ onClose }: { onClose?: () => void }) => {
   const { isSubmitting } = useFormContext();
@@ -104,34 +105,40 @@ const CustomerFormInner = ({ onClose }: { onClose?: () => void }) => {
 
 const CustomerForm = ({ 
     customerId, 
+    initialValues,
     onSuccess,
     onClose 
 }: { 
     customerId?: string; 
+    initialValues?: any;
     onSuccess?: () => void;
     onClose?: () => void;
 }) => {
   const { showSnackbar } = useSnackbar();
 
   const formProps = {
-    endpoint: customerId ? `/customers/${customerId}` : "/customers", // Adjusted endpoint to root (proxied to /api in Frontend? No, usually Next.js proxy or full URL)
-    // Wait, the utility in `Form` uses `useFormFetch` which likely uses `fetchFromBackend` or similar.
-    // The user's `MilkForm` used `/milk/bulk`.
-    // My previous backend cleanup put customers at `/customers`.
-    // So endpoint is `/customers`.
-    method: (customerId ? "PUT" : "POST") as "POST" | "PUT",
+    endpoint: customerId ? `/customers/${customerId}` : "/customers",
+    method: (customerId ? "PATCH" : "POST") as "POST" | "PATCH",
     onSuccess: () => {
       showSnackbar("Customer saved successfully!", "success");
       if (onSuccess) onSuccess();
-      if (onClose) onClose();
+
+      // if (onClose) onClose();
     },
     onError: (err: any) => {
       showSnackbar(err.message || "Failed to save customer", "error");
     },
+
     defaultValues: {
         rateGroup: 'A',
         defaultMorningRate: 45,
-        defaultEveningRate: 45
+        defaultEveningRate: 45,
+        organisation_id: DEFAULT_ORGANISATION_ID,
+        ...(() => {
+            if (!initialValues) return {};
+            const { _id, ...rest } = initialValues;
+            return rest;
+        })()
     }
   };
 

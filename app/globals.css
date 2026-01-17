@@ -1,16 +1,18 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  color-scheme: light;
   /* Standard Clean Light Theme */
   --background: #f8fafc; /* Slate 50 */
   --foreground: #0f172a; /* Slate 900 */
-  
+
   --color-primary: #3b82f6; /* Blue 500 */
   --color-secondary: #64748b; /* Slate 500 */
-  
+
   --color-surface: #ffffff;
   --color-border: #e2e8f0; /* Slate 200 */
-  
+
   --radius: 0.75rem;
 }
 
@@ -20,7 +22,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
-  
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -36,37 +38,37 @@
 
 /* Material UI Dark Mode Overrides */
 .dark .MuiInputBase-input {
-    color: white !important;
+  color: white !important;
 }
 
 .dark .MuiInputLabel-root {
-    color: #94a3b8 !important; /* slate-400 */
+  color: #94a3b8 !important; /* slate-400 */
 }
 .dark .MuiInputLabel-root.Mui-focused {
-    color: #3b82f6 !important; /* blue-500 */
+  color: #3b82f6 !important; /* blue-500 */
 }
 
 .dark .MuiOutlinedInput-notchedOutline {
-    border-color: #334155 !important; /* slate-700 */
+  border-color: #334155 !important; /* slate-700 */
 }
 
 .dark .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-    border-color: #94a3b8 !important; /* slate-400 */
+  border-color: #94a3b8 !important; /* slate-400 */
 }
 
 .dark .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-    border-color: #3b82f6 !important; /* blue-500 */
+  border-color: #3b82f6 !important; /* blue-500 */
 }
 
 .dark .MuiFormHelperText-root {
-    color: #94a3b8 !important; /* slate-400 */
+  color: #94a3b8 !important; /* slate-400 */
 }
 
 .dark .MuiSelect-icon {
-    color: #94a3b8 !important;
+  color: #94a3b8 !important;
 }
 
 .dark .MuiPaper-root.MuiMenu-paper {
-    background-color: #1e293b !important; /* slate-800 */
-    color: white !important;
+  background-color: #1e293b !important; /* slate-800 */
+  color: white !important;
 }

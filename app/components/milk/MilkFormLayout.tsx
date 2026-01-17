@@ -7,6 +7,8 @@ import {
   usePathname,
 } from "next/navigation";
 import { TextField } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 import { TopHeader } from "@/app/components/ui/Header";
 
 import MilkForm from "./Form/MilkForm";
@@ -27,21 +29,23 @@ export default function MilkFormLayout() {
           { label: "Milk Record", href: "#" },
         ]}
         actionButton={
-          <TextField
-            type="date"
+          <DatePicker
             label="Date"
-            size="small"
-            value={dateParam}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const newDate = e.target.value;
-              router.push(`?date=${newDate}`);
+            value={dayjs(dateParam)}
+            onChange={(newValue) => {
+              if (newValue) {
+                router.push(`?date=${newValue.format('YYYY-MM-DD')}`);
+              }
+            }}
+            slotProps={{
+              textField: {
+                size: "small",
+              }
             }}
           />
         }
       />
-      <div className="w-full flex-grow">
-        <MilkForm dateParam={dateParam} />
-      </div>
+      <MilkForm dateParam={dateParam} />
     </div>
   );
 }

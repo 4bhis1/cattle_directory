@@ -30,7 +30,7 @@ const useFormFetch = ({
     const {reset} = useFormContext();
     
     const {showSnackbar} = useSnackbar()
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(!!endpoint && enabled)
     const [error, setError] = useState<Error | null>(null)
     const [data, setData] = useState<any>(null)
 

@@ -2,15 +2,18 @@
 
 import React, { useState } from "react";
 import { useFieldArray } from "react-hook-form";
-import { LocalDrink, Person, Search, AttachMoney } from "@mui/icons-material";
-import { TextField, InputAdornment, MenuItem, LinearProgress } from "@mui/material";
+import { LocalDrink, Person, Search, Settings, Save, CurrencyRupee } from "@mui/icons-material";
+import { TextField, InputAdornment, LinearProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Alert } from "@mui/material";
 
 import Form, { useFormContext } from "@/app/components/Form/Form";
 import FormNumber from "@/app/components/Form/inputs/FormNumber";
+import FormButton from "@/app/components/Form/components/FormButton";
 import StickyFooter, { SummaryData } from "@/app/components/ui/StickyFooter";
 import Loader from "@/app/components/ui/Loader";
 import { useSnackbar } from "@/app/context/SnackbarContext";
 import { salesBeforeSubmit, salesPostFetch } from "../helperFunctions";
+import { DEFAULT_ORGANISATION_ID } from "@/app/context/CommonProvider";
+import ManageCustomersDrawer from "../ManageCustomersDrawer";
 
 // --- Table Component ---
 const SalesTable = ({
@@ -20,7 +23,7 @@ const SalesTable = ({
   loading?: boolean;
   isReadOnly?: boolean;
 }) => {
-  const { control } = useFormContext();
+  const { control, isLoading } = useFormContext();
   const { fields } = useFieldArray({
     control,
     name: "records",
@@ -30,7 +33,7 @@ const SalesTable = ({
   // Local state for filtering
   const [searchQuery, setSearchQuery] = useState("");
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <div className="bg-white dark:bg-slate-900 p-8 text-center rounded-2xl border border-slate-200 dark:border-slate-800">
         <Loader text="Loading customers..." />
@@ -77,7 +80,16 @@ const SalesTable = ({
                 className="w-full md:w-64"
              />
          </div>
-         <div className="text-sm text-slate-500 font-medium">
+         <div className="flex items-center gap-4">
+             <div className="text-sm text-slate-500 font-medium hidden md:block">
+                 Showing {fields.filter((field: any) => {
+                     return field.name.toLowerCase().includes(searchQuery.toLowerCase());
+                 }).length} entries
+             </div>
+            
+         </div>
+         {/* Mobile count display */}
+         <div className="md:hidden text-sm text-slate-500 font-medium w-full text-right">
              Showing {fields.filter((field: any) => {
                  return field.name.toLowerCase().includes(searchQuery.toLowerCase());
              }).length} entries
@@ -100,9 +112,7 @@ const SalesTable = ({
                   </div>
                 </th>
                 <th
-                  colSpan={3} // Qty, Rate, Amt. Fat can be optional or hidden if fixed? Let's include Fat for now if backend supports it. MilkForm had Fat.
-                  // Sales usually is Qty * Rate. Fat determines Rate sometimes.
-                  // Previous SalesForm had Qty, Fat, Rate, Amt.
+                  colSpan={3}
                   className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10"
                 >
                   <div className="flex items-center justify-center gap-1">
@@ -117,18 +127,12 @@ const SalesTable = ({
                     <LocalDrink fontSize="small" /> Evening
                   </div>
                 </th>
-                <th rowSpan={2} className="py-4 px-6 font-semibold text-right text-slate-700 dark:text-slate-300">
-                    Total
-                </th>
               </tr>
               <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {/* Morning */}
                 <th className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-medium">Qty (L)</th>
-                 {/* Fat column removed for simplicity/space? Or add it? Re-adding Fat as requested in "same as milk form" layout but tailored for sales. MilkForm had Fat. SalesForm had Fat. */
-                 <th className="py-2 px-4 text-center font-medium">Fat (%)</th>
-                 /* Rate is important for sales */ }
+                <th className="py-2 px-4 text-center font-medium">Fat (%)</th>
                 <th className="py-2 px-4 text-center font-medium">Rate</th>
-                {/* Amount calculated visually? */}
 
                 {/* Evening */}
                 <th className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-medium">Qty (L)</th>
@@ -138,16 +142,8 @@ const SalesTable = ({
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {fields.map((field: any, index) => {
-                 // Filter
                  if (!field.name.toLowerCase().includes(searchQuery.toLowerCase())) return null;
 
-                 // We need to access current values for calculations.
-                 // FormNumber doesn't return value here. We rely on useWatch or watch in parent?
-                 // Or we accept we don't show row total dynamically without watching EVERY row (perf hit).
-                 // MilkForm didn't show row totals, only footer totals.
-                 // SalesForm (previous) showed row totals.
-                 // Let's rely on default functionality: Input fields.
-                 
                  return (
                   <tr
                     key={field.key}
@@ -203,7 +199,10 @@ const SalesTable = ({
                          readOnly={isReadOnly}
                          min={0}
                          variant="standard"
-                         InputProps={{ disableUnderline: true }}
+                         InputProps={{ 
+                             disableUnderline: true,
+                             startAdornment: <span className="text-xs text-slate-400 mr-0.5">₹</span>
+                         }}
                          inputProps={{ className: "text-center text-slate-500" }}
                          onFocus={(e: any) => e.target.select()}
                        />
@@ -243,15 +242,13 @@ const SalesTable = ({
                          readOnly={isReadOnly}
                          min={0}
                          variant="standard"
-                         InputProps={{ disableUnderline: true }}
+                         InputProps={{ 
+                             disableUnderline: true, 
+                             startAdornment: <span className="text-xs text-slate-400 mr-0.5">₹</span>
+                         }}
                          inputProps={{ className: "text-center text-slate-500" }}
                          onFocus={(e: any) => e.target.select()}
                        />
-                    </td>
-                    
-                    {/* Total (Cannot easily calculate row total here without watching row values. Will leave placeholder or fix later) */}
-                    <td className="py-3 px-6 text-right font-medium text-slate-500">
-                        {/* - */}
                     </td>
                   </tr>
                 );
@@ -265,11 +262,11 @@ const SalesTable = ({
 };
 
 // --- Form Inner ---
-const SalesFormInner = ({ isReadOnly }: { isReadOnly?: boolean }) => {
+const SalesFormInner = ({ isReadOnly, onRefresh }: { isReadOnly?: boolean; onRefresh?: () => void }) => {
   const { watch, isSubmitting, handleSubmit, onSubmit } = useFormContext();
 
-  // Calculations
   const records = watch("records") || [];
+  const stats = watch("stats");
   
   let totalMorningQty = 0;
   let totalEveningQty = 0;
@@ -288,18 +285,65 @@ const SalesFormInner = ({ isReadOnly }: { isReadOnly?: boolean }) => {
   
   const totalQty = totalMorningQty + totalEveningQty;
 
+  const produced = Number(stats?.produced || 0);
+  const waste = Number(stats?.waste || 0);
+  // User Rule: Red bar if Total Sales (totalQty) + Waste > Produced
+  const isOverProduction = (totalQty + waste) > produced;
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  
+  const handleSaveClick = () => {
+    setIsConfirmOpen(true);
+  };
+
+
+  const handleConfirm = () => {
+    setIsConfirmOpen(false);
+    handleSubmit(onSubmit)();
+  };
+
   return (
     <>
       <div className="sticky top-20 z-50 w-full">
         <LinearProgress variant="determinate" value={0} sx={{ height: 6 }} />
       </div>
-      <div className="w-full flex-grow px-4 md:px-8 py-6">
-        <SalesTable isReadOnly={isReadOnly} />
+      <div className="w-full flex-grow px-4 md:px-8 py-6 space-y-4">
+        {/* Red Bar Validation */}
+        {isOverProduction && (
+            <Alert 
+                severity="error" 
+                variant="filled" 
+                className="rounded-xl shadow-md font-medium"
+                action={
+                    <div className="text-sm font-bold bg-white/20 px-2 py-1 rounded">
+                        Diff: {((totalQty + waste) - produced).toFixed(1)}L
+                    </div>
+                }
+            >
+                Production Mismatch: Sales ({totalQty.toFixed(1)}L) + Waste ({waste.toFixed(1)}L) exceeds Produced ({produced.toFixed(1)}L)!
+            </Alert>
+        )}
+
+        <SalesTable 
+        />
       </div>
       <StickyFooter
         summary={
           <SummaryData
             stats={[
+              {
+                label: "Produced",
+                value: (stats?.produced || 0).toFixed(1),
+                unit: "L",
+                valueColor: "text-blue-600 dark:text-blue-400",
+                containerStyle: "bg-yellow-500"
+              },
+              {
+                 label: "Waste",
+                 value: (stats?.waste || 0).toFixed(1),
+                 unit: "L",
+                 valueColor: "text-red-600 dark:text-red-400",
+              },
               {
                 label: "Morning",
                 value: totalMorningQty.toFixed(1),
@@ -319,7 +363,7 @@ const SalesFormInner = ({ isReadOnly }: { isReadOnly?: boolean }) => {
                  valueColor: "text-green-600",
               },
               {
-                label: "Total Qty",
+                label: "Total Sold",
                 value: totalQty.toFixed(1),
                 unit: "L",
                 valueColor: "text-slate-800 dark:text-white",
@@ -327,45 +371,143 @@ const SalesFormInner = ({ isReadOnly }: { isReadOnly?: boolean }) => {
             ]}
           />
         }
-        submitButton={{
-          text: "Save Sales",
-          onClick: handleSubmit(onSubmit),
-          loading: isSubmitting,
-          disabled: isSubmitting || isReadOnly,
-        }}
-        buttonStyle="w-32"
-        buttonLabel="Save"
         parentStyle="px-4 md:px-10"
-      />
+      >
+        <SummaryData
+            stats={[
+              {
+                label: "Produced",
+                value: (stats?.produced || 0).toFixed(1),
+                unit: "L",
+                valueColor: "text-blue-600 dark:text-blue-400",
+              },
+              {
+                 label: "Waste",
+                 value: (stats?.waste || 0).toFixed(1),
+                 unit: "L",
+                 valueColor: "text-red-600 dark:text-red-400",
+              },
+              {
+                label: "Morning",
+                value: totalMorningQty.toFixed(1),
+                unit: "L",
+                valueColor: "text-blue-600",
+              },
+              {
+                label: "Evening",
+                value: totalEveningQty.toFixed(1),
+                unit: "L",
+                valueColor: "text-purple-600",
+              },
+              {
+                 label: "Sales Value",
+                 value: totalAmount.toFixed(0),
+                 unit: "₹",
+                 valueColor: "text-green-600",
+              },
+              {
+                label: "Total Sold",
+                value: totalQty.toFixed(1),
+                unit: "L",
+                valueColor: "text-slate-800 dark:text-white",
+              },
+            ]}
+          />
+        <div onClick={handleSaveClick}>
+            <FormButton
+                label="Save Sales"
+                fullWidth={false}
+                Icon={<CurrencyRupee />}
+            />
+        </div>
+      </StickyFooter>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        PaperProps={{
+            className: "bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-100 dark:border-slate-800"
+        }}
+      >
+        <DialogTitle className="text-xl font-bold text-slate-800 dark:text-white pb-2">
+            Confirm Sales
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText className="text-slate-600 dark:text-slate-300">
+            Please verify the sales summary before saving.
+          </DialogContentText>
+          
+          {isOverProduction && (
+             <Alert severity="error" className="mt-4 mb-2 rounded-xl">
+                 <div className="font-bold">Over Production Warning</div>
+                 Total sales ({totalQty.toFixed(1)} L) + Waste ({waste.toFixed(1)} L) exceeds produced milk ({produced.toFixed(1)} L).
+             </Alert>
+          )}
+          <div className="mt-6 flex flex-col gap-4 bg-slate-50 dark:bg-slate-950 p-6 rounded-xl border border-slate-100 dark:border-slate-800">
+             <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-slate-500">Total Quantity</span>
+                <span className="text-lg font-bold text-slate-800 dark:text-white">{totalQty.toFixed(1)} L</span>
+             </div>
+             <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
+                <span className="text-sm font-medium text-slate-500">Total Sales Value</span>
+                <span className="text-2xl font-black text-green-600">₹{totalAmount.toFixed(0)}</span>
+             </div>
+          </div>
+        </DialogContent>
+        <DialogActions className="p-4 pt-0">
+          <Button 
+            onClick={() => setIsConfirmOpen(false)} 
+            className="text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirm} 
+            variant="contained"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl px-6"
+            autoFocus
+          >
+            Confirm & Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+
+      
+   
     </>
   );
 };
 
 const SalesForm = ({ dateParam }: { dateParam: string }) => {
   const { showSnackbar } = useSnackbar();
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const formProps = {
-    fetchUrl: `/sales/daily?date=${dateParam}`,
+  const formProps = React.useMemo(() => ({
+    fetchUrl: `/sales/daily?date=${dateParam}&key=${refreshKey}`,
     postFetch: salesPostFetch,
     endpoint: "/sales/bulk",
     method: "POST" as "POST",
     beforeSubmit: (data: any) => salesBeforeSubmit(data, dateParam),
     onSuccess: () => {
       showSnackbar("Sales records saved successfully!", "success");
+      setRefreshKey(prev => prev + 1); // Refresh data (and restore table)
     },
     onError: (err: any) => {
       showSnackbar(err.message || "Failed to save records", "error");
     },
     defaultValues: {
       records: [],
+      organisation_id: DEFAULT_ORGANISATION_ID,
     },
     className: "flex flex-col flex-grow h-full"
-  };
+  }), [dateParam, showSnackbar, refreshKey]);
 
   return (
     <div className="flex flex-col flex-grow h-full"> 
         <Form {...formProps}>
-            <SalesFormInner />
+            <SalesFormInner onRefresh={() => setRefreshKey(prev => prev + 1)} />
         </Form>
     </div>
   );

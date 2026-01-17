@@ -11,6 +11,8 @@ import StickyFooter, { SummaryData } from "@/app/components/ui/StickyFooter";
 import Loader from "@/app/components/ui/Loader";
 import { useSnackbar } from "@/app/context/SnackbarContext";
 import { milkBeforeSubmit, milkPostFetch } from "../helperFunctions";
+import { DEFAULT_ORGANISATION_ID } from "@/app/context/CommonProvider";
+import FormProgressBar from "../../Form/components/ProgressBar";
 
 // --- Types ---
 interface MilkEntry {
@@ -325,11 +327,25 @@ const MilkFormInner = ({ isReadOnly }: { isReadOnly?: boolean }) => {
   );
   const total = totalMorning + totalEvening;
 
+  const calculateProgress = (formData: any, isValid: boolean) => {
+    const records = formData.records || [];
+    if (records.length === 0) return 0;
+
+    let filledCount = 0;
+    records.forEach((record: any) => {
+      // Check if morning milk is entered
+      if (record.morningMilk && Number(record.morningMilk) > 0) filledCount++;
+      // Check if evening milk is entered
+      if (record.eveningMilk && Number(record.eveningMilk) > 0) filledCount++;
+    });
+
+    // Total possible slots is records.length * 2 (Morning + Evening)
+    return (filledCount / (records.length * 2)) * 100;
+  };
+
   return (
     <>
-      <div className="sticky top-20 z-50 w-full">
-        <LinearProgress variant="determinate" value={0} sx={{ height: 6 }} />
-      </div>
+      <FormProgressBar calculateProgress={calculateProgress} />
       <div className="w-full flex-grow px-4 md:px-8 py-6">
         <MilkTable isReadOnly={isReadOnly} />
       </div>
@@ -393,19 +409,20 @@ const MilkForm = ({ dateParam }: { dateParam: string }) => {
     onError: (err: any) => {
       showSnackbar(err.message || "Failed to save records", "error");
     },
-    defaultValues: {
+    defaultValues: React.useMemo(() => ({
       records: [],
-    },
+      organisation_id: DEFAULT_ORGANISATION_ID,
+    }), []),
     // Pass class to form element via Form component (requires Form.tsx fix)
     className: "flex flex-col flex-grow h-full"
   };
 
   return (
-    <div className="flex flex-col flex-grow h-full"> 
+    // <div className="flex flex-col flex-grow h-full"> 
         <Form {...formProps}>
             <MilkFormInner />
         </Form>
-    </div>
+    // </div>
   );
 };
 

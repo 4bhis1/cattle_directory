@@ -14,7 +14,6 @@ interface MilkEntry {
 }
 
 export const milkPostFetch = (data: any) => {
-  // Data is the array of merged records
   return { records: data };
 };
 
@@ -23,47 +22,26 @@ export const milkBeforeSubmit = (data: any, dateParam: string) => {
   const records = data.records || [];
 
   records.forEach((record: MilkEntry) => {
-    // Morning Record
     if (Number(record.morningMilk) > 0 || record.morningId) {
       milkPayload.push({
         cattleId: record.cattleId,
-        milkingSession: "morning",
+        session: "morning",
         date: dateParam,
         quantity: Number(record.morningMilk) || 0,
-        quality: {
-          fat: Number(record.morningFat) || 0,
-          snf: 0,
-          temperature: 0,
-        },
-        soldTo: "dairy",
-        pricePerLiter: 20,
-        totalAmount: 0,
-        paymentStatus: "pending",
-        notes: "",
+        fat: Number(record.morningFat) || 0,
       });
     }
 
-    // Evening Record
     if (Number(record.eveningMilk) > 0 || record.eveningId) {
       milkPayload.push({
         cattleId: record.cattleId,
-        milkingSession: "evening",
+        session: "evening",
         date: dateParam,
         quantity: Number(record.eveningMilk) || 0,
-        quality: {
-          fat: Number(record.eveningFat) || 0,
-          snf: 0,
-          temperature: 0,
-        },
-        soldTo: "dairy",
-        pricePerLiter: 20,
-        totalAmount: 0,
-        paymentStatus: "pending",
-        notes: "",
+        fat: Number(record.eveningFat) || 0,
       });
     }
   });
 
-  // Backend expects array directly
   return milkPayload;
 };

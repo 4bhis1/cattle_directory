@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   useForm,
   SubmitHandler,
@@ -18,29 +18,32 @@ import FormAutocomplete from "./inputs/FormAutocomplete";
 import FormSmartAutocomplete from "./inputs/FormSmartAutocomplete";
 import useFormFetch from "./hooks/useFormFetch";
 import useFormSubmit from "./hooks/useFormSubmit";
+import Loader from "../ui/Loader";
 
-type FormContextType = UseFormReturn<any> & {
+export type FormContextType = UseFormReturn<any> & {
   onSubmit: SubmitHandler<any>;
   isSubmitting: boolean;
   error: Error | null;
   data: any;
+  isLoading: boolean;
 };
 
 export const FormContext = createContext<FormContextType | null>(null);
 
-interface FormProps {
+type FormProps = {
   children: React.ReactNode;
-  onSubmit?: SubmitHandler<any>;
+  onSubmit?: SubmitHandler<any>; // Renamed to customSubmit in component
   endpoint?: string;
   method?: "POST" | "PUT" | "PATCH";
-  beforeSubmit?: (data: any) => void;
+  beforeSubmit?: (data: any) => any;
   onSuccess?: (data: any) => void;
-  onError?: (error: any) => void;
-  defaultValues?: any;
-  fetchUrl?: string | null;
-  postFetch?: (data: any) => any;
-  fetchParams?: any;
-}
+  onError?: (error: Error) => void;
+  defaultValues?: FieldValues;
+  fetchUrl?: string;
+  mode?: "onBlur" | "onChange" | "onSubmit" | "onTouched" | "all";
+  // For other props passed to the form element
+  [key: string]: any;
+};
 
 const FormWrapper = ({
   children,
@@ -48,6 +51,7 @@ const FormWrapper = ({
   postFetch,
   fetchParams,
   onSubmit,
+  setLoading,
   ...props
 }: {
   children: React.ReactNode;
@@ -55,13 +59,19 @@ const FormWrapper = ({
   postFetch?: (data: any) => any;
   fetchParams?: any;
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  setLoading: (loading: boolean) => void;
   [key: string]: any;
 }) => {
-  useFormFetch({
+  const { isLoading } = useFormFetch({
     endpoint: fetchUrl,
     params: fetchParams,
     postFetch,
   });
+
+  useEffect(() => {
+      setLoading(isLoading);
+  }, [isLoading, setLoading]);
+
   return (
     <form onSubmit={onSubmit} className="w-full" {...props}>
       {children}
@@ -79,10 +89,20 @@ const Form = ({
   onError,
   defaultValues,
   fetchUrl,
+  mode = "onChange",
   ...props
 }: FormProps) => {
-  const formProps = useForm({ defaultValues });
+  const formProps = useForm({ defaultValues, mode });
+  const { reset } = formProps;
+  // Initialize loading to true if we are going to fetch, to prevent empty flash
+  const [isLoading, setIsLoading] = useState(!!fetchUrl);
 
+  useEffect(() => {
+    if (defaultValues) {
+        reset(defaultValues);
+    }
+  }, [defaultValues, reset]);
+  
   const {
     submit,
     isSubmitting,
@@ -106,10 +126,16 @@ const Form = ({
         isSubmitting,
         error: submitError,
         data: submitResult,
+        isLoading,
       }}
     >
-      <FormWrapper fetchUrl={fetchUrl} onSubmit={formProps.handleSubmit(onSubmit)} {...props}>
-        {children}
+      <FormWrapper 
+        fetchUrl={fetchUrl} 
+        onSubmit={formProps.handleSubmit(onSubmit)} 
+        setLoading={setIsLoading}
+        {...props}
+      >
+        {isLoading ? <Loader /> : children}
       </FormWrapper>
     </FormContext.Provider>
   );

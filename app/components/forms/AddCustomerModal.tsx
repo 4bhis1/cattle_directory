@@ -10,6 +10,7 @@ import {
     CircularProgress,
     Alert,
 } from '@mui/material';
+import { DEFAULT_ORGANISATION_ID } from '@/app/context/CommonProvider';
 
 interface AddCustomerModalProps {
     open: boolean;
@@ -44,7 +45,10 @@ export default function AddCustomerModal({ open, onClose, onCustomerAdded }: Add
             const response = await fetch('/api/customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    organisation_id: DEFAULT_ORGANISATION_ID,
+                }),
             });
 
             const data = await response.json();

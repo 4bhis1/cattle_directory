@@ -95,7 +95,11 @@ const BasicInfoSection = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <FormNumber name="expectedMilkProduction" label="Est. Daily Milk (L)" />
         <FormNumber name="fatPercentage" label="Fat %" />
-        <FormNumber name="numberOfBirths" label="No. of Births" />
+        <FormNumber 
+          name="numberOfBirths" 
+          label="No. of Births" 
+          inputProps={{ step: 1 }}
+        />
       </div>
 
       {/* Group 3: Production */}

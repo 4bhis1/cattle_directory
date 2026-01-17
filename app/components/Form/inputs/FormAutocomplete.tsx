@@ -1,6 +1,6 @@
 'use client'
 
-import { Controller } from "react-hook-form"
+import { Controller, RegisterOptions } from "react-hook-form"
 import { Autocomplete, TextField } from "@mui/material"
 import { useFormContext } from "../Form"
 
@@ -15,11 +15,12 @@ interface FormAutocompleteProps {
     options: Option[] | ((data: any) => Option[])
     placeholder?: string
     required?: boolean
+    rules?: RegisterOptions
     compute?: (value: any, setValue: any) => void
     className?: string
 }
 
-const FormAutocomplete = ({ name, label, options, placeholder, required, compute, className }: FormAutocompleteProps) => {
+const FormAutocomplete = ({ name, label, options, placeholder, required, rules, compute, className }: FormAutocompleteProps) => {
     const { control, setValue: setFormValue ,watch } = useFormContext()
 
     return (
@@ -27,7 +28,10 @@ const FormAutocomplete = ({ name, label, options, placeholder, required, compute
             <Controller
                 control={control}
                 name={name}
-                rules={{ required: required ? `${label} is required` : false }}
+                rules={{ 
+                    required: required ? `${label} is required` : false,
+                    ...rules 
+                }}
                 render={({ field: { onChange, value, ref, ...fieldProps }, fieldState: { error,  }, formState: {  } }) => {
                     
                         // danger to use

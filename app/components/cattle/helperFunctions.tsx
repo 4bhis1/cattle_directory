@@ -81,7 +81,7 @@ const cattleCalculateAge = (dob: string) => {
 
 export const cattlePostFetch = (data: any) => {
   console.log(">>> postfetchData at cattle form", data);
-  const c = data;
+  const c = data._doc || data;
   return {
     name: c.name,
     breed: c.breed,
@@ -100,14 +100,13 @@ export const cattlePostFetch = (data: any) => {
           typeof img === "string" ? { url: img, _id: img } : img
         )
       : [],
-    status: c.status?.current || "active",
-    statusReason: c.status?.history?.slice(-1)[0]?.reason || "",
-    semen: c.status?.history?.slice(-1)[0]?.semen || "",
+    status: c.status?.current,
     statusHistory: c.status?.history || [],
     currentWeight: c.weight?.current?.toString() || "",
     weightHistory: c.weight?.history || [],
     vaccinations: c.healthRecords?.vaccinations || [],
     sellerId: c.sellerId || "",
     acquisitionType: c.acquisitionType || "purchased",
+    insurance: c.insurance || { company: "", value: "", attachments: [] },
   };
 };

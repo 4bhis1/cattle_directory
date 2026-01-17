@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 import AppLayout from "./components/layout/AppLayout";
 import { SnackbarProvider } from "./context/SnackbarContext";
 import { CommonProvider } from "./context/CommonProvider";
+import { MUIProvider } from "./context/MUIProvider";
 
 export default function RootLayout({
   children,
@@ -31,13 +32,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SnackbarProvider>
-          <CommonProvider>
-            <AppLayout>
-              {children}
-            </AppLayout>
-          </CommonProvider>
-        </SnackbarProvider>
+        <MUIProvider>
+          <SnackbarProvider>
+            <CommonProvider>
+              <AppLayout>
+                {children}
+              </AppLayout>
+            </CommonProvider>
+          </SnackbarProvider>
+        </MUIProvider>
       </body>
     </html>
   );

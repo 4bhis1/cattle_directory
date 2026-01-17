@@ -6,14 +6,15 @@ export interface StatItem {
     label: string;
     value: string | number;
     unit?: string;
+    containerStyle?: string;
     valueColor?: string; // e.g. 'text-blue-600'
 }
 
-export const SummaryData = ({ stats }: { stats: StatItem[] }) => {
+export const SummaryData = ({ stats }: { stats: StatItem[];}) => {
     return (
         <div className="flex gap-8 overflow-x-auto w-full md:w-auto justify-center md:justify-start no-scrollbar">
             {stats.map((stat, index) => (
-                <div key={index} className="flex flex-col items-center md:items-start min-w-[80px]">
+                <div key={index} className={`flex flex-col items-center md:items-start min-w-[80px] ${stat.containerStyle || ''}`}>
                     <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
                         {stat.label}
                     </span>

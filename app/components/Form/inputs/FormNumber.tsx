@@ -28,6 +28,10 @@ const FormNumber = ({ className, ...props }: FormNumberProps) => {
                 slotProps={{
                     inputLabel: {
                         shrink: true,
+                    },
+                    htmlInput: {
+                        step: 'any',
+                        ...((restInputProps as any).inputProps || {})
                     }
                 }}
             />

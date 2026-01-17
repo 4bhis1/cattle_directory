@@ -21,14 +21,7 @@ const WeightSection = () => {
                     <FormNumber name="currentWeight" label="Current Weight (kg)" />
                 </div>
             </div>
-            <Button variant="outlined" size="small" onClick={() => {
-                const cw = getValues('currentWeight');
-                if (cw) {
-                    setValue('weightHistory', [...weightHistory, { weight: parseFloat(cw), measuredAt: new Date().toISOString() }]);
-                }
-            }}>
-                Save to History
-            </Button>
+
 
             <div className="max-h-52 overflow-y-auto mt-4">
                 {weightHistory.length === 0 ? (

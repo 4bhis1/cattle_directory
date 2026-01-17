@@ -27,6 +27,8 @@ import {
     Tune, 
     CalendarMonth 
 } from '@mui/icons-material';
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 
 interface FilterBarProps {
     searchQuery: string;
@@ -298,21 +300,17 @@ export default function FilterBar({
                                 </FormControl>
                                 {dateFilterType !== 'none' && (
                                     <div className="flex gap-2 flex-1">
-                                        <TextField
-                                            type="date"
-                                            size="small"
-                                            value={startDate}
-                                            onChange={(e) => setStartDate(e.target.value)}
-                                            fullWidth
-                                            helperText="Start"
+                                        <DatePicker
+                                            label="Start"
+                                            value={startDate ? dayjs(startDate) : null}
+                                            onChange={(newValue) => setStartDate(newValue ? newValue.format('YYYY-MM-DD') : '')}
+                                            slotProps={{ textField: { size: 'small', fullWidth: true } }}
                                         />
-                                        <TextField
-                                            type="date"
-                                            size="small"
-                                            value={endDate}
-                                            onChange={(e) => setEndDate(e.target.value)}
-                                            fullWidth
-                                            helperText="End"
+                                        <DatePicker
+                                            label="End"
+                                            value={endDate ? dayjs(endDate) : null}
+                                            onChange={(newValue) => setEndDate(newValue ? newValue.format('YYYY-MM-DD') : '')}
+                                            slotProps={{ textField: { size: 'small', fullWidth: true } }}
                                         />
                                     </div>
                                 )}

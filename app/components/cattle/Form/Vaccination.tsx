@@ -13,9 +13,9 @@ export const VaccinationSection = () => {
                     Icon={<Vaccines sx={{ color: "#8b5cf6" }} />}
                   />
             <div className="flex flex-col md:flex-row gap-4 mb-4 items-start md:items-center">
-                <FormInput name="vaccineName" label="Name" required />
-                <FormDate name="administeredDate" label="Date" required />
-                <FormDate name="nextDueDate" label="Next Due Date" required />
+                <FormInput name="vaccineName" label="Name" />
+                <FormDate name="administeredDate" label="Date" />
+                <FormDate name="nextDueDate" label="Next Due Date" />
             </div>
 
             <div className="space-y-2">

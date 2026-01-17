@@ -13,60 +13,71 @@ import { useState } from "react";
 import { apiService } from "@/lib/apiService";
 import { FormCard, FormCardHeader } from "../../Form/components/FormCard";
 import { Storefront } from "@mui/icons-material";
+import { DEFAULT_ORGANISATION_ID } from "../../../context/CommonProvider";
+import { useSnackbar } from "@/app/context/SnackbarContext";
 
 const AddSellerForm = ({
   openNewSeller,
   setOpenNewSeller,
+  fieldName,
 }: {
   openNewSeller: boolean;
   setOpenNewSeller: (open: boolean) => void;
+  fieldName: string;
 }) => {
 
-  return <div>
-    hello
+    const { showSnackbar } = useSnackbar();
+    const { ...parentFormProps } = useFormContext();
+  
 
-  </div>
-  // const [newSellerData, setNewSellerData] = useState({
-  //   name: "",
-  //   phoneNumber: "",
-  //   address: "",
-  // });
-  // const { setValue } = useFormContext();
 
-  // const handleCreateSeller = async () => {
-  //   try {
-  //     const res = await apiService.post("/sellers", newSellerData);
-  //     if (res.success) {
-  //       setValue("sellerId", res.data); // Set the full object
-  //       setOpenNewSeller(false);
-  //       setNewSellerData({ name: "", phoneNumber: "", address: "" });
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to create seller");
-  //   }
-  // };
+  const formProps = {
+    endpoint: "/sellers",
+    method: "POST" as "POST" | "PUT" | "PATCH",
+    beforeSubmit: (data: any) => {
+      return {
+        ...data,
+        organisation_id: DEFAULT_ORGANISATION_ID
+      }
+    },
+    onSuccess: (response: any) => {
+      const newSeller = response.data;
+      showSnackbar("Saved successfully!", "success");
+      setTimeout(() => {
+        setOpenNewSeller(false);
+      }, 1000);
+      parentFormProps.setValue(fieldName, newSeller._id || newSeller.id);
+    },
+    onError: (err: any) => {
+      showSnackbar(err.message, "error");
+    },
+    defaultValues: {
+      organisation_id: DEFAULT_ORGANISATION_ID,
+    },
+    mode: "onChange" as const,
+  }
 
-  // return (
-  //   <Dialog open={openNewSeller} onClose={() => setOpenNewSeller(false)}>
-  //     <Form>
-  //       <FormCard>
-  //         <FormCardHeader
-  //           title="Seller Information"
-  //           Icon={<Storefront className="mr-2 text-indigo-500" />}
-  //         />
-  //         <div className="flex flex-col gap-4">
-  //           <FormInput name="name" label="Name" required />
-  //           <FormInput name="phoneNumber" label="Phone Number" required />
-  //           <FormInput name="address" label="Address" required />
-  //           <div className="flex justify-end gap-8 mt-4">
-  //             <FormButton label="Close" />
-  //             <FormButton label="Save and close" />
-  //           </div>
-  //         </div>
-  //       </FormCard>
-  //     </Form>
-  //   </Dialog>
-  // );
+  return (
+    <Dialog open={openNewSeller} onClose={() => setOpenNewSeller(false)}>
+      <Form {...formProps}>
+        <FormCard>
+          <FormCardHeader
+            title="Seller Information"
+            Icon={<Storefront className="mr-2 text-indigo-500" />}
+          />
+          <div className="flex flex-col gap-4">
+            <FormInput name="name" label="Name" required />
+            <FormInput name="phoneNumber" label="Phone Number" required />
+            <FormInput name="address" label="Address" required />
+            <div className="flex justify-end gap-8 mt-4">
+              <Button onClick={() => setOpenNewSeller(false)}>Close</Button>
+              <FormButton label="Save and close" />
+            </div>
+          </div>
+        </FormCard>
+      </Form>
+    </Dialog>
+  );
 };
 
 export default AddSellerForm;

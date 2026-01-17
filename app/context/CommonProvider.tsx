@@ -9,7 +9,11 @@ export interface User {
     email: string;
     role: 'admin' | 'user' | 'guest';
     avatarUrl?: string;
+    organisation_id: string;
 }
+
+// Global constant for organisation ID
+export const DEFAULT_ORGANISATION_ID = 'org_default_001';
 
 // Define the context state interface
 interface CommonContextType {
@@ -28,7 +32,8 @@ const DUMMY_ADMIN_USER: User = {
     name: 'Admin User',
     email: 'admin@cattle-directory.com',
     role: 'admin',
-    avatarUrl: 'https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff'
+    avatarUrl: 'https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff',
+    organisation_id: DEFAULT_ORGANISATION_ID
 };
 
 interface CommonProviderProps {

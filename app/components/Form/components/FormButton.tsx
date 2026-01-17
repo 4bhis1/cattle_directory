@@ -12,7 +12,7 @@ interface FormButtonProps {
 
 const FormButton = ({ label = "Submit", className, fullWidth = true, Icon }: FormButtonProps) => {
     const { formState: { isSubmitting, isDirty, isLoading, isValid, errors } } = useFormContext()
-    const disabled = isSubmitting || !isDirty || !isValid
+    const disabled = isSubmitting || !isDirty || !isValid || isLoading
     return (
         <Button
             type="submit"
@@ -20,18 +20,23 @@ const FormButton = ({ label = "Submit", className, fullWidth = true, Icon }: For
             color="primary"
             disabled={disabled}
             fullWidth={fullWidth}
-            className={className}
+            className={`${className} ${disabled ? 'opacity-50 cursor-not-allowed' : 'pointer'}`}
             startIcon={isSubmitting && <CircularProgress size={20} color="inherit" />}
             sx={{
                 py: 1.5,
                 textTransform: 'none',
                 fontWeight: 600,
                 borderRadius: 2,
-                gap: 2
+                gap: 2,
+                transition: 'all 0.2s ease-in-out',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                    opacity: disabled ? 1 : 0.9,
+                },
             }}
         >
             {Icon && Icon}
-            {disabled ? 'Processing...' : label}
+            {isLoading ? 'Processing...' : label}
         </Button>
     )
 }

@@ -79,7 +79,7 @@ const DrawerContent = ({ collapsed, isMobile, toggleSidebar, handleDrawerToggle,
         { label: 'Dashboard', path: '/home', icon: Dashboard },
         { label: 'Cattle', path: '/cattle', icon: Pets },
         { label: 'Milk Production', path: '/milk', href: `/milk`, icon: LocalDrink },
-        { label: 'Sales Records', path: '/sales/record', href: `/sales/record`, icon: AttachMoney },
+        { label: 'Sales', path: '/sales', href: `/sales`, icon: AttachMoney },
     ];
 
     return (

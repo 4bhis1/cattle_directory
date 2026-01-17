@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { Snackbar, Alert, AlertColor, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -24,12 +24,12 @@ export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
     const [severity, setSeverity] = useState<AlertColor>('success');
     const [duration, setDuration] = useState(4000);
 
-    const showSnackbar = (msg: string, sev: AlertColor = 'success', dur: number = 4000) => {
+    const showSnackbar = useCallback((msg: string, sev: AlertColor = 'success', dur: number = 4000) => {
         setMessage(msg);
         setSeverity(sev);
         setDuration(dur);
         setOpen(true);
-    };
+    }, []);
 
     const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
         if (reason === 'clickaway') {

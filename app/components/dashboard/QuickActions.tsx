@@ -13,6 +13,14 @@ export const quickActionsData = [
   //   color: '#10b981',
   //   bgColor: 'rgba(16, 185, 129, 0.15)'
   // },
+   {
+    id: 'cattle',
+    icon: '🐄',
+    title: 'Cattle Management',
+    description: 'Update cattle information and health records',
+    color: '#8b5cf6',
+    bgColor: 'rgba(139, 92, 246, 0.15)'
+  },
   {
     id: 'milk',
     icon: '🥛',
@@ -21,14 +29,7 @@ export const quickActionsData = [
     color: '#3b82f6',
     bgColor: 'rgba(59, 130, 246, 0.15)'
   },
-  {
-    id: 'cattle',
-    icon: '🐄',
-    title: 'Cattle Management',
-    description: 'Update cattle information and health records',
-    color: '#8b5cf6',
-    bgColor: 'rgba(139, 92, 246, 0.15)'
-  },
+ 
   {
     id: 'sales/record',
     icon: '💵',

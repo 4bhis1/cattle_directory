@@ -2,8 +2,8 @@
 
 import React, { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LinearProgress } from '@mui/material';
 import MilkFormLayout from '@/app/components/milk/MilkFormLayout';
+import Loader from '@/app/components/ui/Loader';
 
 function MilkPageContent() {
     const searchParams = useSearchParams();
@@ -18,7 +18,7 @@ function MilkPageContent() {
     }, [dateParam, router]);
 
     if (!dateParam) {
-        return <LinearProgress />; 
+        return <Loader />; 
     }
 
     return <MilkFormLayout />;
@@ -26,7 +26,7 @@ function MilkPageContent() {
 
 export default function MilkPage() {
     return (
-        <Suspense fallback={<LinearProgress />}>
+        <Suspense fallback={<Loader />}>
             <MilkPageContent />
         </Suspense>
     );
