@@ -1,10 +1,8 @@
 import React from "react";
-import { useFormContext } from "../../Form/Form";
+import { useFormContext, FileUpload, FormInput, FormNumber } from "@/app/components/Form";
 import { Security, Delete, AttachFile } from "@mui/icons-material";
 import { IconButton, List, ListItem, ListItemText, ListItemAvatar, Avatar } from "@mui/material";
-import FileUpload from "../../Form/inputs/FileUpload";
-import { FormCard, FormCardHeader } from "../../Form/components/FormCard";
-import { FormInput, FormNumber } from "../../Form/Form";
+import { FormCard, FormCardHeader } from "@/app/components/Form/components/FormCard";
 
 const InsuranceSection = () => {
   const { watch, setValue } = useFormContext();

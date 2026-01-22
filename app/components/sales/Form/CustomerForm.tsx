@@ -5,11 +5,10 @@ import { Person, Phone, Home, Email, CurrencyRupee } from "@mui/icons-material";
 import Form, {
   FormInput,
   FormButton,
-  FormContext,
   useFormContext,
   FormAutocomplete,
   FormNumber
-} from "@/app/components/Form/Form";
+} from "@/app/components/Form";
 import { useSnackbar } from "@/app/context/SnackbarContext";
 import { DEFAULT_ORGANISATION_ID } from "@/app/context/CommonProvider";
 

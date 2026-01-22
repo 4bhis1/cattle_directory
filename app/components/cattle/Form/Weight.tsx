@@ -1,10 +1,6 @@
 
-import React from 'react';
-import { useFormContext } from '../../Form/Form';
+import { useFormContext, FormNumber, FormCard, FormCardHeader } from '@/app/components/Form';
 import { MonitorWeight } from '@mui/icons-material';
-import { Button } from '@mui/material';
-import { FormNumber } from '../../Form/Form';
-import { FormCard, FormCardHeader } from '../../Form/components/FormCard';
 
 const WeightSection = () => {
     const { watch, setValue, getValues } = useFormContext();

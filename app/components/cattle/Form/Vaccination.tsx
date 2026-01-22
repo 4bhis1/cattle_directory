@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Vaccines } from "@mui/icons-material";
-import { FormCard, FormCardHeader } from "../../Form/components/FormCard";
-import { FormDate, FormInput } from "../../Form/Form";
+import { FormDate, FormInput, FormCard, FormCardHeader } from "@/app/components/Form";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, List } from "@mui/material";
 
 export const VaccinationSection = () => {

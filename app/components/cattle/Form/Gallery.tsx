@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useFormContext } from '../../Form/Form';
+import { useFormContext } from '@/app/components/Form';
 import { PhotoLibrary, Delete } from '@mui/icons-material';
 import { Avatar, ImageList, ImageListItem, IconButton } from '@mui/material';
 import FileUpload from '../../Form/inputs/FileUpload';

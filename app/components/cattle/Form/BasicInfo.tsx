@@ -5,8 +5,10 @@ import {
   FormInput,
   FormNumber,
   FormSmartAutocomplete,
-} from "../../Form/Form";
-import { FormCard, FormCardHeader } from "../../Form/components/FormCard";
+  FormCard, 
+  FormCardHeader,
+} from "@/app/components/Form";
+// import {  } from "@/app/components/Form/components/FormCard";
 import {
   ACQUISITION_TYPE_OPTIONS,
   BUFFALO_BREEDS,

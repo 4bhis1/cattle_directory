@@ -7,18 +7,10 @@ import {
   UseFormReturn,
   FieldValues,
 } from "react-hook-form";
-import FormInput from "./inputs/FormInput";
-import FormButton from "./components/FormButton";
-import FormRadio from "./inputs/FormRadio";
-import FormCheckbox from "./inputs/FormCheckbox";
-import FormDate from "./inputs/FormDate";
-import FormNumber from "./inputs/FormNumber";
-import FormImage from "./inputs/FormImage";
-import FormAutocomplete from "./inputs/FormAutocomplete";
-import FormSmartAutocomplete from "./inputs/FormSmartAutocomplete";
+
 import useFormFetch from "./hooks/useFormFetch";
 import useFormSubmit from "./hooks/useFormSubmit";
-import Loader from "../ui/Loader";
+import FormLoader from "./components/FormLoader";
 
 export type FormContextType = UseFormReturn<any> & {
   onSubmit: SubmitHandler<any>;
@@ -135,31 +127,18 @@ const Form = ({
         setLoading={setIsLoading}
         {...props}
       >
-        {isLoading ? <Loader /> : children}
+        {isLoading ? <FormLoader /> : children}
       </FormWrapper>
     </FormContext.Provider>
   );
 };
 
-const useFormContext = () => {
+export const useFormContext = () => {
   const context = useContext(FormContext);
   if (!context) {
     throw new Error("useFormContext must be used within a Form");
   }
   return context;
-};
-
-export {
-  useFormContext,
-  FormInput,
-  FormButton,
-  FormRadio,
-  FormCheckbox,
-  FormDate,
-  FormNumber,
-  FormImage,
-  FormAutocomplete,
-  FormSmartAutocomplete,
 };
 
 export default Form;

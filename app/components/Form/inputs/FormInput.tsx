@@ -32,7 +32,10 @@ const FormInput = ({ className, ...props }: FormInputProps) => {
                         shrink: true,
                     },
                     htmlInput: {
-                        ...restInputProps
+                        ...(() => {
+                            const { multiline, rows, maxRows, minRows, ...validProps } = restInputProps as any;
+                            return validProps;
+                        })()
                     }
                 }}
             />

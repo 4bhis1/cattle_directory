@@ -2,12 +2,31 @@
 
 import React, { useState } from "react";
 import { useFieldArray } from "react-hook-form";
-import { LocalDrink, Person, Search, Settings, Save, CurrencyRupee } from "@mui/icons-material";
-import { TextField, InputAdornment, LinearProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Alert } from "@mui/material";
-
-import Form, { useFormContext } from "@/app/components/Form/Form";
-import FormNumber from "@/app/components/Form/inputs/FormNumber";
-import FormButton from "@/app/components/Form/components/FormButton";
+import {
+  LocalDrink,
+  Person,
+  Search,
+  Settings,
+  Save,
+  CurrencyRupee,
+} from "@mui/icons-material";
+import {
+  TextField,
+  InputAdornment,
+  LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Alert,
+} from "@mui/material";
+import Form, {
+  useFormContext,
+  FormNumber,
+  FormButton,
+} from "@/app/components/Form";
 import StickyFooter, { SummaryData } from "@/app/components/ui/StickyFooter";
 import Loader from "@/app/components/ui/Loader";
 import { useSnackbar } from "@/app/context/SnackbarContext";
@@ -63,37 +82,48 @@ const SalesTable = ({
     <div className="space-y-4">
       {/* Filter Bar */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-         <div className="flex items-center gap-2 w-full md:w-auto">
-             <TextField
-                placeholder="Search by name..."
-                size="small"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                    startAdornment: (
-                        <InputAdornment position="start">
-                            <Search className="text-slate-400" fontSize="small" />
-                        </InputAdornment>
-                    ),
-                    className: "bg-slate-50 dark:bg-slate-800 rounded-xl"
-                }}
-                className="w-full md:w-64"
-             />
-         </div>
-         <div className="flex items-center gap-4">
-             <div className="text-sm text-slate-500 font-medium hidden md:block">
-                 Showing {fields.filter((field: any) => {
-                     return field.name.toLowerCase().includes(searchQuery.toLowerCase());
-                 }).length} entries
-             </div>
-            
-         </div>
-         {/* Mobile count display */}
-         <div className="md:hidden text-sm text-slate-500 font-medium w-full text-right">
-             Showing {fields.filter((field: any) => {
-                 return field.name.toLowerCase().includes(searchQuery.toLowerCase());
-             }).length} entries
-         </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <TextField
+            placeholder="Search by name..."
+            size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search className="text-slate-400" fontSize="small" />
+                </InputAdornment>
+              ),
+              className: "bg-slate-50 dark:bg-slate-800 rounded-xl",
+            }}
+            className="w-full md:w-64"
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-slate-500 font-medium hidden md:block">
+            Showing{" "}
+            {
+              fields.filter((field: any) => {
+                return field.name
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase());
+              }).length
+            }{" "}
+            entries
+          </div>
+        </div>
+        {/* Mobile count display */}
+        <div className="md:hidden text-sm text-slate-500 font-medium w-full text-right">
+          Showing{" "}
+          {
+            fields.filter((field: any) => {
+              return field.name
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase());
+            }).length
+          }{" "}
+          entries
+        </div>
       </div>
 
       {/* Table */}
@@ -130,21 +160,28 @@ const SalesTable = ({
               </tr>
               <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {/* Morning */}
-                <th className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-medium">Qty (L)</th>
+                <th className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-medium">
+                  Qty (L)
+                </th>
                 <th className="py-2 px-4 text-center font-medium">Fat (%)</th>
                 <th className="py-2 px-4 text-center font-medium">Rate</th>
 
                 {/* Evening */}
-                <th className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-medium">Qty (L)</th>
+                <th className="py-2 px-4 text-center border-l border-slate-200 dark:border-slate-800 font-medium">
+                  Qty (L)
+                </th>
                 <th className="py-2 px-4 text-center font-medium">Fat (%)</th>
                 <th className="py-2 px-4 text-center font-medium">Rate</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {fields.map((field: any, index) => {
-                 if (!field.name.toLowerCase().includes(searchQuery.toLowerCase())) return null;
+                if (
+                  !field.name.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                  return null;
 
-                 return (
+                return (
                   <tr
                     key={field.key}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
@@ -152,15 +189,17 @@ const SalesTable = ({
                     <td className="py-3 px-6">
                       <div className="flex flex-col">
                         <span className="font-semibold text-slate-800 dark:text-white text-base">
-                            {field.name}
+                          {field.name}
                         </span>
                         <div className="flex items-center gap-2 mt-1">
-                             <span className="text-xs text-slate-500">{field.phone}</span>
-                             {field.rateGroup && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500">
-                                    Grp {field.rateGroup}
-                                </span>
-                             )}
+                          <span className="text-xs text-slate-500">
+                            {field.phone}
+                          </span>
+                          {field.rateGroup && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500">
+                              Grp {field.rateGroup}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -174,38 +213,52 @@ const SalesTable = ({
                         min={0}
                         step={0.1}
                         variant="standard"
-                        InputProps={{ disableUnderline: true, className: "bg-transparent" }}
-                        inputProps={{ className: "text-center font-bold text-blue-600" }}
+                        InputProps={{
+                          disableUnderline: true,
+                          className: "bg-transparent",
+                        }}
+                        inputProps={{
+                          className: "text-center font-bold text-blue-600",
+                        }}
                         onFocus={(e: any) => e.target.select()}
                       />
                     </td>
                     <td className="py-2 px-4 bg-blue-50/20">
                       <FormNumber
-                         name={`records.${index}.morningFat`}
-                         placeholder="4.5"
-                         readOnly={isReadOnly}
-                         min={0}
-                         step={0.1}
-                         variant="standard"
-                         InputProps={{ disableUnderline: true, endAdornment: <span className="text-xs text-slate-400">%</span> }}
-                         inputProps={{ className: "text-center text-slate-500" }}
-                         onFocus={(e: any) => e.target.select()}
+                        name={`records.${index}.morningFat`}
+                        placeholder="4.5"
+                        readOnly={isReadOnly}
+                        min={0}
+                        step={0.1}
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          endAdornment: (
+                            <span className="text-xs text-slate-400">%</span>
+                          ),
+                        }}
+                        inputProps={{ className: "text-center text-slate-500" }}
+                        onFocus={(e: any) => e.target.select()}
                       />
                     </td>
                     <td className="py-2 px-4 bg-blue-50/20">
-                       <FormNumber
-                         name={`records.${index}.morningRate`}
-                         placeholder="45"
-                         readOnly={isReadOnly}
-                         min={0}
-                         variant="standard"
-                         InputProps={{ 
-                             disableUnderline: true,
-                             startAdornment: <span className="text-xs text-slate-400 mr-0.5">₹</span>
-                         }}
-                         inputProps={{ className: "text-center text-slate-500" }}
-                         onFocus={(e: any) => e.target.select()}
-                       />
+                      <FormNumber
+                        name={`records.${index}.morningRate`}
+                        placeholder="45"
+                        readOnly={isReadOnly}
+                        min={0}
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          startAdornment: (
+                            <span className="text-xs text-slate-400 mr-0.5">
+                              ₹
+                            </span>
+                          ),
+                        }}
+                        inputProps={{ className: "text-center text-slate-500" }}
+                        onFocus={(e: any) => e.target.select()}
+                      />
                     </td>
 
                     {/* Evening */}
@@ -217,38 +270,52 @@ const SalesTable = ({
                         min={0}
                         step={0.1}
                         variant="standard"
-                        InputProps={{ disableUnderline: true, className: "bg-transparent" }}
-                        inputProps={{ className: "text-center font-bold text-purple-600" }}
+                        InputProps={{
+                          disableUnderline: true,
+                          className: "bg-transparent",
+                        }}
+                        inputProps={{
+                          className: "text-center font-bold text-purple-600",
+                        }}
                         onFocus={(e: any) => e.target.select()}
                       />
                     </td>
                     <td className="py-2 px-4 bg-purple-50/20">
                       <FormNumber
-                         name={`records.${index}.eveningFat`}
-                         placeholder="4.5"
-                         readOnly={isReadOnly}
-                         min={0}
-                         step={0.1}
-                         variant="standard"
-                         InputProps={{ disableUnderline: true, endAdornment: <span className="text-xs text-slate-400">%</span> }}
-                         inputProps={{ className: "text-center text-slate-500" }}
-                         onFocus={(e: any) => e.target.select()}
+                        name={`records.${index}.eveningFat`}
+                        placeholder="4.5"
+                        readOnly={isReadOnly}
+                        min={0}
+                        step={0.1}
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          endAdornment: (
+                            <span className="text-xs text-slate-400">%</span>
+                          ),
+                        }}
+                        inputProps={{ className: "text-center text-slate-500" }}
+                        onFocus={(e: any) => e.target.select()}
                       />
                     </td>
                     <td className="py-2 px-4 bg-purple-50/20">
-                       <FormNumber
-                         name={`records.${index}.eveningRate`}
-                         placeholder="45"
-                         readOnly={isReadOnly}
-                         min={0}
-                         variant="standard"
-                         InputProps={{ 
-                             disableUnderline: true, 
-                             startAdornment: <span className="text-xs text-slate-400 mr-0.5">₹</span>
-                         }}
-                         inputProps={{ className: "text-center text-slate-500" }}
-                         onFocus={(e: any) => e.target.select()}
-                       />
+                      <FormNumber
+                        name={`records.${index}.eveningRate`}
+                        placeholder="45"
+                        readOnly={isReadOnly}
+                        min={0}
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          startAdornment: (
+                            <span className="text-xs text-slate-400 mr-0.5">
+                              ₹
+                            </span>
+                          ),
+                        }}
+                        inputProps={{ className: "text-center text-slate-500" }}
+                        onFocus={(e: any) => e.target.select()}
+                      />
                     </td>
                   </tr>
                 );
@@ -262,40 +329,45 @@ const SalesTable = ({
 };
 
 // --- Form Inner ---
-const SalesFormInner = ({ isReadOnly, onRefresh }: { isReadOnly?: boolean; onRefresh?: () => void }) => {
+const SalesFormInner = ({
+  isReadOnly,
+  onRefresh,
+}: {
+  isReadOnly?: boolean;
+  onRefresh?: () => void;
+}) => {
   const { watch, isSubmitting, handleSubmit, onSubmit } = useFormContext();
 
   const records = watch("records") || [];
   const stats = watch("stats");
-  
+
   let totalMorningQty = 0;
   let totalEveningQty = 0;
   let totalAmount = 0;
 
   records.forEach((r: any) => {
-      const mQty = Number(r.morningQty) || 0;
-      const mRate = Number(r.morningRate) || 0;
-      const eQty = Number(r.eveningQty) || 0;
-      const eRate = Number(r.eveningRate) || 0;
+    const mQty = Number(r.morningQty) || 0;
+    const mRate = Number(r.morningRate) || 0;
+    const eQty = Number(r.eveningQty) || 0;
+    const eRate = Number(r.eveningRate) || 0;
 
-      totalMorningQty += mQty;
-      totalEveningQty += eQty;
-      totalAmount += (mQty * mRate) + (eQty * eRate);
+    totalMorningQty += mQty;
+    totalEveningQty += eQty;
+    totalAmount += mQty * mRate + eQty * eRate;
   });
-  
+
   const totalQty = totalMorningQty + totalEveningQty;
 
   const produced = Number(stats?.produced || 0);
   const waste = Number(stats?.waste || 0);
   // User Rule: Red bar if Total Sales (totalQty) + Waste > Produced
-  const isOverProduction = (totalQty + waste) > produced;
+  const isOverProduction = totalQty + waste > produced;
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  
+
   const handleSaveClick = () => {
     setIsConfirmOpen(true);
   };
-
 
   const handleConfirm = () => {
     setIsConfirmOpen(false);
@@ -310,22 +382,22 @@ const SalesFormInner = ({ isReadOnly, onRefresh }: { isReadOnly?: boolean; onRef
       <div className="w-full flex-grow px-4 md:px-8 py-6 space-y-4">
         {/* Red Bar Validation */}
         {isOverProduction && (
-            <Alert 
-                severity="error" 
-                variant="filled" 
-                className="rounded-xl shadow-md font-medium"
-                action={
-                    <div className="text-sm font-bold bg-white/20 px-2 py-1 rounded">
-                        Diff: {((totalQty + waste) - produced).toFixed(1)}L
-                    </div>
-                }
-            >
-                Production Mismatch: Sales ({totalQty.toFixed(1)}L) + Waste ({waste.toFixed(1)}L) exceeds Produced ({produced.toFixed(1)}L)!
-            </Alert>
+          <Alert
+            severity="error"
+            variant="filled"
+            className="rounded-xl shadow-md font-medium"
+            action={
+              <div className="text-sm font-bold bg-white/20 px-2 py-1 rounded">
+                Diff: {(totalQty + waste - produced).toFixed(1)}L
+              </div>
+            }
+          >
+            Production Mismatch: Sales ({totalQty.toFixed(1)}L) + Waste (
+            {waste.toFixed(1)}L) exceeds Produced ({produced.toFixed(1)}L)!
+          </Alert>
         )}
 
-        <SalesTable 
-        />
+        <SalesTable />
       </div>
       <StickyFooter
         summary={
@@ -336,13 +408,13 @@ const SalesFormInner = ({ isReadOnly, onRefresh }: { isReadOnly?: boolean; onRef
                 value: (stats?.produced || 0).toFixed(1),
                 unit: "L",
                 valueColor: "text-blue-600 dark:text-blue-400",
-                containerStyle: "bg-yellow-500"
+                containerStyle: "bg-yellow-500",
               },
               {
-                 label: "Waste",
-                 value: (stats?.waste || 0).toFixed(1),
-                 unit: "L",
-                 valueColor: "text-red-600 dark:text-red-400",
+                label: "Waste",
+                value: (stats?.waste || 0).toFixed(1),
+                unit: "L",
+                valueColor: "text-red-600 dark:text-red-400",
               },
               {
                 label: "Morning",
@@ -357,10 +429,10 @@ const SalesFormInner = ({ isReadOnly, onRefresh }: { isReadOnly?: boolean; onRef
                 valueColor: "text-purple-600",
               },
               {
-                 label: "Sales Value",
-                 value: totalAmount.toFixed(0),
-                 unit: "₹",
-                 valueColor: "text-green-600",
+                label: "Sales Value",
+                value: totalAmount.toFixed(0),
+                unit: "₹",
+                valueColor: "text-green-600",
               },
               {
                 label: "Total Sold",
@@ -374,51 +446,51 @@ const SalesFormInner = ({ isReadOnly, onRefresh }: { isReadOnly?: boolean; onRef
         parentStyle="px-4 md:px-10"
       >
         <SummaryData
-            stats={[
-              {
-                label: "Produced",
-                value: (stats?.produced || 0).toFixed(1),
-                unit: "L",
-                valueColor: "text-blue-600 dark:text-blue-400",
-              },
-              {
-                 label: "Waste",
-                 value: (stats?.waste || 0).toFixed(1),
-                 unit: "L",
-                 valueColor: "text-red-600 dark:text-red-400",
-              },
-              {
-                label: "Morning",
-                value: totalMorningQty.toFixed(1),
-                unit: "L",
-                valueColor: "text-blue-600",
-              },
-              {
-                label: "Evening",
-                value: totalEveningQty.toFixed(1),
-                unit: "L",
-                valueColor: "text-purple-600",
-              },
-              {
-                 label: "Sales Value",
-                 value: totalAmount.toFixed(0),
-                 unit: "₹",
-                 valueColor: "text-green-600",
-              },
-              {
-                label: "Total Sold",
-                value: totalQty.toFixed(1),
-                unit: "L",
-                valueColor: "text-slate-800 dark:text-white",
-              },
-            ]}
-          />
+          stats={[
+            {
+              label: "Produced",
+              value: (stats?.produced || 0).toFixed(1),
+              unit: "L",
+              valueColor: "text-blue-600 dark:text-blue-400",
+            },
+            {
+              label: "Waste",
+              value: (stats?.waste || 0).toFixed(1),
+              unit: "L",
+              valueColor: "text-red-600 dark:text-red-400",
+            },
+            {
+              label: "Morning",
+              value: totalMorningQty.toFixed(1),
+              unit: "L",
+              valueColor: "text-blue-600",
+            },
+            {
+              label: "Evening",
+              value: totalEveningQty.toFixed(1),
+              unit: "L",
+              valueColor: "text-purple-600",
+            },
+            {
+              label: "Sales Value",
+              value: totalAmount.toFixed(0),
+              unit: "₹",
+              valueColor: "text-green-600",
+            },
+            {
+              label: "Total Sold",
+              value: totalQty.toFixed(1),
+              unit: "L",
+              valueColor: "text-slate-800 dark:text-white",
+            },
+          ]}
+        />
         <div onClick={handleSaveClick}>
-            <FormButton
-                label="Save Sales"
-                fullWidth={false}
-                Icon={<CurrencyRupee />}
-            />
+          <FormButton
+            label="Save Sales"
+            fullWidth={false}
+            Icon={<CurrencyRupee />}
+          />
         </div>
       </StickyFooter>
 
@@ -427,43 +499,53 @@ const SalesFormInner = ({ isReadOnly, onRefresh }: { isReadOnly?: boolean; onRef
         open={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         PaperProps={{
-            className: "bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-100 dark:border-slate-800"
+          className:
+            "bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-100 dark:border-slate-800",
         }}
       >
         <DialogTitle className="text-xl font-bold text-slate-800 dark:text-white pb-2">
-            Confirm Sales
+          Confirm Sales
         </DialogTitle>
         <DialogContent>
           <DialogContentText className="text-slate-600 dark:text-slate-300">
             Please verify the sales summary before saving.
           </DialogContentText>
-          
+
           {isOverProduction && (
-             <Alert severity="error" className="mt-4 mb-2 rounded-xl">
-                 <div className="font-bold">Over Production Warning</div>
-                 Total sales ({totalQty.toFixed(1)} L) + Waste ({waste.toFixed(1)} L) exceeds produced milk ({produced.toFixed(1)} L).
-             </Alert>
+            <Alert severity="error" className="mt-4 mb-2 rounded-xl">
+              <div className="font-bold">Over Production Warning</div>
+              Total sales ({totalQty.toFixed(1)} L) + Waste ({waste.toFixed(1)}{" "}
+              L) exceeds produced milk ({produced.toFixed(1)} L).
+            </Alert>
           )}
           <div className="mt-6 flex flex-col gap-4 bg-slate-50 dark:bg-slate-950 p-6 rounded-xl border border-slate-100 dark:border-slate-800">
-             <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-500">Total Quantity</span>
-                <span className="text-lg font-bold text-slate-800 dark:text-white">{totalQty.toFixed(1)} L</span>
-             </div>
-             <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
-                <span className="text-sm font-medium text-slate-500">Total Sales Value</span>
-                <span className="text-2xl font-black text-green-600">₹{totalAmount.toFixed(0)}</span>
-             </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-slate-500">
+                Total Quantity
+              </span>
+              <span className="text-lg font-bold text-slate-800 dark:text-white">
+                {totalQty.toFixed(1)} L
+              </span>
+            </div>
+            <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
+              <span className="text-sm font-medium text-slate-500">
+                Total Sales Value
+              </span>
+              <span className="text-2xl font-black text-green-600">
+                ₹{totalAmount.toFixed(0)}
+              </span>
+            </div>
           </div>
         </DialogContent>
         <DialogActions className="p-4 pt-0">
-          <Button 
-            onClick={() => setIsConfirmOpen(false)} 
+          <Button
+            onClick={() => setIsConfirmOpen(false)}
             className="text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirm} 
+          <Button
+            onClick={handleConfirm}
             variant="contained"
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl px-6"
             autoFocus
@@ -472,10 +554,6 @@ const SalesFormInner = ({ isReadOnly, onRefresh }: { isReadOnly?: boolean; onRef
           </Button>
         </DialogActions>
       </Dialog>
-      
-
-      
-   
     </>
   );
 };
@@ -484,31 +562,34 @@ const SalesForm = ({ dateParam }: { dateParam: string }) => {
   const { showSnackbar } = useSnackbar();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const formProps = React.useMemo(() => ({
-    fetchUrl: `/sales/daily?date=${dateParam}&key=${refreshKey}`,
-    postFetch: salesPostFetch,
-    endpoint: "/sales/bulk",
-    method: "POST" as "POST",
-    beforeSubmit: (data: any) => salesBeforeSubmit(data, dateParam),
-    onSuccess: () => {
-      showSnackbar("Sales records saved successfully!", "success");
-      setRefreshKey(prev => prev + 1); // Refresh data (and restore table)
-    },
-    onError: (err: any) => {
-      showSnackbar(err.message || "Failed to save records", "error");
-    },
-    defaultValues: {
-      records: [],
-      organisation_id: DEFAULT_ORGANISATION_ID,
-    },
-    className: "flex flex-col flex-grow h-full"
-  }), [dateParam, showSnackbar, refreshKey]);
+  const formProps = React.useMemo(
+    () => ({
+      fetchUrl: `/sales/daily?date=${dateParam}&key=${refreshKey}`,
+      postFetch: salesPostFetch,
+      endpoint: "/sales/bulk",
+      method: "POST" as "POST",
+      beforeSubmit: (data: any) => salesBeforeSubmit(data, dateParam),
+      onSuccess: () => {
+        showSnackbar("Sales records saved successfully!", "success");
+        setRefreshKey((prev) => prev + 1); // Refresh data (and restore table)
+      },
+      onError: (err: any) => {
+        showSnackbar(err.message || "Failed to save records", "error");
+      },
+      defaultValues: {
+        records: [],
+        organisation_id: DEFAULT_ORGANISATION_ID,
+      },
+      className: "flex flex-col flex-grow h-full",
+    }),
+    [dateParam, showSnackbar, refreshKey],
+  );
 
   return (
-    <div className="flex flex-col flex-grow h-full"> 
-        <Form {...formProps}>
-            <SalesFormInner onRefresh={() => setRefreshKey(prev => prev + 1)} />
-        </Form>
+    <div className="flex flex-col flex-grow h-full">
+      <Form {...formProps}>
+        <SalesFormInner onRefresh={() => setRefreshKey((prev) => prev + 1)} />
+      </Form>
     </div>
   );
 };

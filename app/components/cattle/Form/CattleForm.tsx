@@ -1,14 +1,12 @@
 "use client";
 
 import React from "react";
-import { LinearProgress } from "@mui/material";
 import { Pets } from "@mui/icons-material";
-import FormButton from "@/app/components/Form/components/FormButton";
+import Form, { FormButton, FormProgressBar } from "@/app/components/Form";
 import { useSnackbar } from "@/app/context/SnackbarContext";
 import { useUser, DEFAULT_ORGANISATION_ID } from "@/app/context/CommonProvider";
 import StickyFooter from "../../ui/StickyFooter";
 import BasicInfoSection from "./BasicInfo";
-import Form from "../../Form/Form";
 import { VaccinationSection } from "./Vaccination";
 import GallerySection from "./Gallery";
 import StatusSection from "./Status";
@@ -16,7 +14,6 @@ import WeightSection from "./Weight";
 import SellerSection from "./Seller";
 import InsuranceSection from "./Insurance";
 import { cattleBeforeSubmit, cattlePostFetch } from "../helperFunctions";
-import FormProgressBar from "../../Form/components/ProgressBar";
 import { useRouter } from "next/navigation";
 
 const requiredFields = [

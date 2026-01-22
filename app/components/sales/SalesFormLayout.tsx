@@ -8,7 +8,7 @@ import { Button, TextField, Drawer, IconButton } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import { TopHeader } from "@/app/components/ui/Header";
-import { Add, Close, DeleteSweep, Settings } from "@mui/icons-material";
+import { Add, Close, DeleteSweep, Settings, ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useState } from "react";
 
 import SalesForm from "./Form/SalesForm";
@@ -35,13 +35,13 @@ export default function SalesFormLayout() {
           { label: "Sales Record", href: "#" },
         ]}
         actionButton={
-          <div className="flex gap-3 items-center">
-            <Button
+          <div className="flex gap-2 items-center">
+             <Button
               variant="outlined"
               color="error"
               startIcon={<DeleteSweep />}
               onClick={() => setIsWasteDrawerOpen(true)}
-              className="border-red-500 text-red-500 hover:bg-red-50 font-bold py-2 px-4 rounded-xl transition-all"
+              className="hidden md:flex border-red-500 text-red-500 hover:bg-red-50 font-bold py-2 px-4 rounded-xl transition-all"
               sx={{ textTransform: "none", borderRadius: "12px" }}
             >
               Record Waste
@@ -53,23 +53,50 @@ export default function SalesFormLayout() {
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition-all"
               sx={{ textTransform: "none", borderRadius: "12px" }}
             >
-              Manage Clients
+              Clients
             </Button>
-            <DatePicker
-              label="Date"
-              value={dayjs(dateParam)}
-              onChange={(newValue) => {
-                if (newValue) {
-                  router.push(`?date=${newValue.format('YYYY-MM-DD')}`);
-                }
-              }}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  className: "bg-white dark:bg-slate-900 rounded-lg"
-                }
-              }}
-            />
+            
+            <div className="flex items-center gap-1 bg-white dark:bg-slate-900 rounded-xl p-1 shadow-sm border border-slate-200 dark:border-slate-800">
+               <IconButton
+                 onClick={() => {
+                   const prevDate = dayjs(dateParam).subtract(1, 'day').format('YYYY-MM-DD');
+                   router.push(`?date=${prevDate}`);
+                 }}
+                 size="small"
+                 className="text-slate-500 hover:text-blue-600"
+               >
+                 <ChevronLeft fontSize="small" />
+               </IconButton>
+               <DatePicker
+                 value={dayjs(dateParam)}
+                 onChange={(newValue) => {
+                   if (newValue) {
+                     router.push(`?date=${newValue.format('YYYY-MM-DD')}`);
+                   }
+                 }}
+                 slotProps={{
+                   textField: {
+                     size: "small",
+                     variant: "standard",
+                     className: "w-28 text-center",
+                     InputProps: {
+                        disableUnderline: true,
+                        className: "text-sm font-bold text-slate-700 dark:text-slate-200"
+                     }
+                   }
+                 }}
+               />
+               <IconButton
+                 onClick={() => {
+                   const nextDate = dayjs(dateParam).add(1, 'day').format('YYYY-MM-DD');
+                   router.push(`?date=${nextDate}`);
+                 }}
+                 size="small"
+                 className="text-slate-500 hover:text-blue-600"
+               >
+                 <ChevronRight fontSize="small" />
+               </IconButton>
+            </div>
           </div>
         }
       />

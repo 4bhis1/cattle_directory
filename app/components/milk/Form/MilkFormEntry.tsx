@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, Box, Typography, Avatar, Chip } from '@mui/material';
-import FormInput from '@/app/components/Form/inputs/FormInput';
-import FormNumber from '@/app/components/Form/inputs/FormNumber';
+import { FormNumber } from '@/app/components/Form';
 import { useWatch } from 'react-hook-form';
 
 interface MilkFormEntryProps {

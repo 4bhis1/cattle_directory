@@ -5,8 +5,7 @@ import { useFieldArray } from "react-hook-form";
 import { LocalDrink, Pets, Search, FilterList } from "@mui/icons-material";
 import { TextField, InputAdornment, MenuItem, IconButton, Menu, LinearProgress } from "@mui/material";
 
-import Form, { useFormContext } from "@/app/components/Form/Form";
-import FormNumber from "@/app/components/Form/inputs/FormNumber";
+import Form, { useFormContext, FormNumber } from "@/app/components/Form";
 import StickyFooter, { SummaryData } from "@/app/components/ui/StickyFooter";
 import Loader from "@/app/components/ui/Loader";
 import { useSnackbar } from "@/app/context/SnackbarContext";

@@ -5,7 +5,7 @@ import Form, {
   FormButton,
   FormAutocomplete,
   FormNumber
-} from "@/app/components/Form/Form";
+} from "@/app/components/Form";
 import { useSnackbar } from "@/app/context/SnackbarContext";
 import { apiService } from "@/lib/apiService";
 import { DEFAULT_ORGANISATION_ID } from "@/app/context/CommonProvider";

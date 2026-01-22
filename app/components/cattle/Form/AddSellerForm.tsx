@@ -8,7 +8,7 @@ import {
   DialogTitle,
   TextField,
 } from "@mui/material";
-import Form, { FormButton, FormInput, useFormContext } from "../../Form/Form";
+import Form, { FormButton, FormInput, useFormContext } from "@/app/components/Form";
 import { useState } from "react";
 import { apiService } from "@/lib/apiService";
 import { FormCard, FormCardHeader } from "../../Form/components/FormCard";
