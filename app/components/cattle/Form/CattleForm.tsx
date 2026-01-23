@@ -41,7 +41,7 @@ const CattleForm = ({ id }: { id?: string }) => {
     onSuccess: (response: any) => {
       showSnackbar("Saved successfully!", "success");
       const savedData = response.data || response;
-      router.push(`/cattle/${savedData._id}`);
+      router.push(`/cattle/view?id=${savedData._id}`);
     },
     onError: (err: any) => {
       showSnackbar(err.message, "error");

@@ -52,7 +52,7 @@ const useInput = <T extends FieldValues = FieldValues>({
         validate: validate,
     }
 
-    const { onChange, ...restRegister } = register(name, rules)
+    const { onChange, ...restRegister } = register(name, rules as any) as any
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = type === 'number' ? parseFloat(e.target.value) : e.target.value

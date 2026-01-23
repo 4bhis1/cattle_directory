@@ -71,7 +71,7 @@ const CattleCard = ({
       <div
         className={`mb-4 group relative overflow-hidden transition-all cursor-pointer duration-300 hover:translate-y-[-2px] hover:shadow-lg
                     ${depth > 0 ? "ml-8 border-l-4 border-l-blue-200 bg-slate-50 dark:bg-slate-800/50" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm"}`}
-        onClick={() => router.push(`/cattle/${cow._id}`)}
+        onClick={() => router.push(`/cattle/view?id=${cow._id}`)}
       >
         <div className="p-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5 flex-1">
@@ -159,7 +159,7 @@ const CattleCard = ({
             />
             <ActionableIcon
               Icon={Edit}
-              onClick={() => router.push(`/cattle/${cow._id}`)}
+              onClick={() => router.push(`/cattle/view?id=${cow._id}`)}
               tooltipText="Edit Details"
             />
           </div>

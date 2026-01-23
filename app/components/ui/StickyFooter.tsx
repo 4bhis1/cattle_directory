@@ -64,7 +64,7 @@ export default function StickyFooter({ children, summary = <div />, submitButton
                         }
                     }}
                 >
-                    {submitButton.loading ? 'Saving...' : submitButton.text}
+                    {submitButton?.loading ? 'Saving...' : submitButton?.text}
                 </Button>
         </>
     }

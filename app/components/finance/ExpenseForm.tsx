@@ -43,15 +43,7 @@ const ExpenseFormInner = ({ onClose }: { onClose?: () => void }) => {
       </div>
 
       {/* Transaction Type */}
-      <FormAutocomplete
-        name="recordType"
-        label="Transaction Type"
-        options={[
-          { value: 'expense', label: 'Expense (Money Out)' },
-          { value: 'income', label: 'Income (Money In)' },
-        ]}
-        rules={{ required: 'Select a type' }}
-      />
+
 
       {/* Group / Source */}
       <FormAutocomplete
@@ -74,7 +66,7 @@ const ExpenseFormInner = ({ onClose }: { onClose?: () => void }) => {
       <FormAutocomplete
         name="paymentMethod"
         label="Payment Method"
-        options={PAYMENT_METHODS.map((m) => ({ value: m, label: m }))}
+        options={PAYMENT_METHODS.map((m) => ({ value: m.toLowerCase(), label: m }))}
         rules={{ required: 'Select a payment method' }}
       />
 
@@ -115,16 +107,17 @@ const ExpenseFormInner = ({ onClose }: { onClose?: () => void }) => {
 /**
  * ExpenseForm – wrapper that supplies endpoint, method and default values.
  */
-const ExpenseForm = ({ expenseId, onSuccess, onClose, defaultDate }: {
+const ExpenseForm = ({ expenseId, onSuccess, onClose, defaultDate, editData }: {
   expenseId?: string;
   onSuccess?: () => void;
   onClose?: () => void;
   defaultDate?: string;
+  editData?: any;
 }) => {
   const { showSnackbar } = useSnackbar();
 
   const formProps = {
-    endpoint: expenseId ? `/expenses/${expenseId}` : '/expenses',
+    endpoint: expenseId ? `/finance/expenses/${expenseId}` : '/finance/expenses',
     method: (expenseId ? 'PATCH' : 'POST') as 'POST' | 'PATCH',
     onSuccess: () => {
       showSnackbar('Transaction saved successfully!', 'success');
@@ -133,8 +126,10 @@ const ExpenseForm = ({ expenseId, onSuccess, onClose, defaultDate }: {
     onError: (err: any) => {
       showSnackbar(err.message || 'Failed to save transaction', 'error');
     },
-    defaultValues: {
-      recordType: 'expense',
+    defaultValues: editData ? {
+        ...editData,
+        date: dayjs(editData.date).format('YYYY-MM-DD'),
+    } : {
       organisation_id: DEFAULT_ORGANISATION_ID,
       date: defaultDate || dayjs().format('YYYY-MM-DD'),
     },

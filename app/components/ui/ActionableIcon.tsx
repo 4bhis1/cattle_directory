@@ -6,7 +6,7 @@ export const ActionableIcon = ({ Icon, onClick, tooltipText, iconStyle = "text-s
         className={iconStyle}
         fontSize="small" /> : null;
 
-    if (tooltipText) {
+    if (tooltipText && iconRender) {
         iconRender = <Tooltip title={tooltipText}>{iconRender}</Tooltip>
     }
 

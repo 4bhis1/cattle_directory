@@ -76,7 +76,7 @@ export default function FinanceTable({ data, loading, onEdit, onDelete }: Financ
                         return (
                             <TableRow
                                 key={row._id}
-                                className="hover:bg-slate-50 transition-colors"
+                                className={`hover:opacity-90 transition-colors ${isExpense ? 'bg-red-50/50 hover:bg-red-50' : 'bg-green-50/50 hover:bg-green-50'}`}
                             >
                                 <TableCell component="th" scope="row">
                                     <span className="font-medium text-slate-700">
