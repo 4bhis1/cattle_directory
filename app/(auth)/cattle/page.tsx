@@ -31,6 +31,7 @@ import {
   ExpandMore,
   Folder,
   Download,
+  Timeline,
 } from "@mui/icons-material";
 import { TopHeader } from "@/app/components/ui/Header";
 import Loader from "@/app/components/ui/Loader";
@@ -148,18 +149,35 @@ const CattleCard = ({
           {/* Quick Actions */}
           <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 border-slate-100 dark:border-slate-800 pt-4 md:pt-0 mt-2 md:mt-0">
             <ActionableIcon
+              Icon={Timeline}
+              onClick={(e: any) => {
+                e.stopPropagation();
+                router.push(`/cattle/lifecycle?id=${cow._id}`);
+              }}
+              tooltipText="View Lifecycle"
+            />
+            <ActionableIcon
               Icon={LocalDrink}
-              onClick={() => router.push(`/milk?cattleId=${cow._id}`)}
+              onClick={(e: any) => {
+                e.stopPropagation();
+                router.push(`/milk?cattleId=${cow._id}`);
+              }}
               tooltipText="Record Milk"
             />
             <ActionableIcon
               Icon={Restaurant}
-              onClick={() => router.push(`/feed/add?cattleId=${cow._id}`)}
+              onClick={(e: any) => {
+                e.stopPropagation();
+                router.push(`/feed/add?cattleId=${cow._id}`);
+              }}
               tooltipText="Record Feed"
             />
             <ActionableIcon
               Icon={Edit}
-              onClick={() => router.push(`/cattle/view?id=${cow._id}`)}
+              onClick={(e: any) => {
+                e.stopPropagation();
+                router.push(`/cattle/view?id=${cow._id}`);
+              }}
               tooltipText="Edit Details"
             />
           </div>
